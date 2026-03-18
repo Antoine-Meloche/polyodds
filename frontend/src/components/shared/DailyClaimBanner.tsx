@@ -1,5 +1,6 @@
 import { useDailyClaim } from '@/hooks/useDailyClaim';
 import { useAuth } from '@/hooks/useAuth';
+import { GiftIcon } from '@/components/shared/icons';
 
 export const DailyClaimBanner = () => {
   const { user } = useAuth();
@@ -16,7 +17,7 @@ export const DailyClaimBanner = () => {
   return (
     <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg p-4 flex items-center justify-between">
       <div className="flex items-center gap-3">
-        <span className="text-2xl animate-bounce">🎁</span>
+        <GiftIcon className="animate-bounce text-amber-700" />
         <div>
           <p className="font-semibold text-amber-900">Daily Bonus Available!</p>
           <p className="text-sm text-amber-800">Claim 100 points now</p>

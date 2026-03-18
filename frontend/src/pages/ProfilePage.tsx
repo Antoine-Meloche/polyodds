@@ -6,27 +6,23 @@ import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { PointsBadge } from '@/components/shared/PointsBadge';
 
 export const ProfilePage = () => {
-  const { username } = useParams<{ username: string }>();
+  const { id } = useParams<{ id: string }>();
   const [tab, setTab] = useState<'open' | 'resolved'>('open');
 
   const { data: user, isLoading: userLoading } = useQuery({
-    queryKey: ['users', username],
-    queryFn: async () => {
-      // In a real app, we'd fetch by username and get the id
-      // For now, we'll just fetch a placeholder
-      return usersAPI.fetchUser(username || '');
-    },
-    enabled: !!username,
+    queryKey: ['users', id],
+    queryFn: () => usersAPI.fetchUser(id || ''),
+    enabled: !!id,
   });
 
   const { data: betsData } = useQuery({
-    queryKey: ['users', username, 'bets', tab],
+    queryKey: ['users', id, 'bets', tab],
     queryFn: () =>
-      usersAPI.fetchUserBets(username || '', {
+      usersAPI.fetchUserBets(id || '', {
         status: tab,
         limit: 50,
       }),
-    enabled: !!username,
+    enabled: !!id,
   });
 
   if (userLoading || !user) return <LoadingSpinner />;

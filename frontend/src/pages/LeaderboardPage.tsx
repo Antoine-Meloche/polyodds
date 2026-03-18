@@ -1,10 +1,17 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
 import { usersAPI } from '@/api/users';
+import { LeaderboardIcon, RankIcon } from '@/components/shared/icons';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { PaginationControls } from '@/components/shared/PaginationControls';
 import { formatPoints } from '@/utils/points';
-import { Link } from 'react-router-dom';
+
+const rankIconClassName: Record<number, string> = {
+  1: 'text-amber-500',
+  2: 'text-slate-400',
+  3: 'text-orange-700',
+};
 
 export const LeaderboardPage = () => {
   const [offset, setOffset] = useState(0);
@@ -20,7 +27,10 @@ export const LeaderboardPage = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">🏆 Leaderboard</h1>
+        <h1 className="flex items-center gap-3 text-3xl font-bold">
+          <LeaderboardIcon className="size-8 text-primary" />
+          <span>Leaderboard</span>
+        </h1>
         <p className="text-muted-foreground">Top points earners</p>
       </div>
 
@@ -37,13 +47,13 @@ export const LeaderboardPage = () => {
             {data.users.map((entry) => (
               <tr key={entry.id} className="border-b hover:bg-secondary transition-colors">
                 <td className="px-4 py-3 text-sm font-semibold">
-                  {entry.rank === 1 && '🥇'}
-                  {entry.rank === 2 && '🥈'}
-                  {entry.rank === 3 && '🥉'}
+                  {entry.rank <= 3 && (
+                    <RankIcon className={rankIconClassName[entry.rank]} />
+                  )}
                   {entry.rank > 3 && `#${entry.rank}`}
                 </td>
                 <td className="px-4 py-3">
-                  <Link to={`/profile/${entry.username}`} className="text-primary hover:underline">
+                  <Link to={`/profile/${entry.id}`} className="text-primary hover:underline">
                     {entry.username}
                   </Link>
                 </td>

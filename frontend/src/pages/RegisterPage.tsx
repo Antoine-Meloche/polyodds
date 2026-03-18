@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authAPI } from '@/api/auth';
+import { BrandIcon } from '@/components/shared/icons';
 import { useAuthStore } from '@/stores/authStore';
 
 export const RegisterPage = () => {
@@ -31,7 +32,10 @@ export const RegisterPage = () => {
     <div className="flex items-center justify-center min-h-screen bg-background">
       <div className="w-full max-w-md">
         <div className="border rounded-lg p-8 bg-card">
-          <h1 className="text-2xl font-bold text-center mb-8">🎲 Create Account</h1>
+          <h1 className="mb-8 flex items-center justify-center gap-2 text-2xl font-bold text-center">
+            <BrandIcon className="text-primary" />
+            <span>Create Account</span>
+          </h1>
 
           {error && <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-lg text-sm">{error}</div>}
 

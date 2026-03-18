@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { AxiosError } from 'axios';
 import { betsAPI } from '@/api/bets';
 
 export const useBet = () => {
@@ -25,6 +26,12 @@ export const useBet = () => {
     placeBet: placeBetMutation.mutate,
     isPending: placeBetMutation.isPending,
     error: placeBetMutation.error,
+    errorMessage:
+      placeBetMutation.error instanceof AxiosError
+        ? placeBetMutation.error.response?.data?.error ?? placeBetMutation.error.message
+        : placeBetMutation.error instanceof Error
+          ? placeBetMutation.error.message
+          : null,
     data: placeBetMutation.data,
   };
 };

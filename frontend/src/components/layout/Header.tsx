@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { BrandIcon } from '@/components/shared/icons';
 import { PointsBadge } from '@/components/shared/PointsBadge';
 
 export const Header = () => {
@@ -8,8 +9,9 @@ export const Header = () => {
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex items-center justify-between h-16 px-4 max-w-7xl mx-auto">
-        <Link to="/" className="font-bold text-lg">
-          🎲 PolyOdds
+        <Link to="/" className="inline-flex items-center gap-2 font-bold text-lg">
+          <BrandIcon className="text-primary" />
+          <span>PolyOdds</span>
         </Link>
 
         <div className="flex-1 px-8">
@@ -24,7 +26,7 @@ export const Header = () => {
           {isAuthenticated && user && (
             <>
               <PointsBadge points={user.points} />
-              <Link to={`/profile/${user.username}`} className="text-sm hover:underline">
+              <Link to={`/profile/${user.id}`} className="text-sm hover:underline">
                 {user.username}
               </Link>
               <button

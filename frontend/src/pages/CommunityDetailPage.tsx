@@ -6,6 +6,7 @@ import { communitiesAPI } from '@/api/communities';
 import { marketsAPI } from '@/api/markets';
 import { MarketList } from '@/components/markets/MarketList';
 import { MemberList } from '@/components/communities/MemberList';
+import { MarketsIcon, MembersIcon, PrivateIcon } from '@/components/shared/icons';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 
 export const CommunityDetailPage = () => {
@@ -46,9 +47,20 @@ export const CommunityDetailPage = () => {
           <h1 className="text-3xl font-bold mb-2">{community.name}</h1>
           <p className="text-muted-foreground">{community.description}</p>
           <div className="flex gap-4 mt-4 text-sm text-muted-foreground">
-            <span>👥 {community.member_count} members</span>
-            <span>📊 {community.market_count} markets</span>
-            {community.is_private && <span>🔒 Private</span>}
+            <span className="inline-flex items-center gap-1.5">
+              <MembersIcon className="size-4" />
+              <span>{community.member_count} members</span>
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <MarketsIcon className="size-4" />
+              <span>{community.market_count} markets</span>
+            </span>
+            {community.is_private && (
+              <span className="inline-flex items-center gap-1.5">
+                <PrivateIcon className="size-4" />
+                <span>Private</span>
+              </span>
+            )}
           </div>
         </div>
         <div className="space-y-2">

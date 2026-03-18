@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import type { MarketWithPools } from '@/types';
 import { useBet } from '@/hooks/useBet';
+import { useAuth } from '@/hooks/useAuth';
 import { formatProbability, formatPayout } from '@/utils/odds';
 
 export const BetPanel = ({ market }: { market: MarketWithPools }) => {
   const [amount, setAmount] = useState<number>(10);
   const [selectedOutcome, setSelectedOutcome] = useState<number>(0);
-  const { placeBet, isPending, error } = useBet();
+  const { user } = useAuth();
+  const { placeBet, isPending, errorMessage } = useBet();
 
   if (market.status !== 'open') {
     return (
@@ -18,9 +20,11 @@ export const BetPanel = ({ market }: { market: MarketWithPools }) => {
 
   const pool = market.pools[selectedOutcome];
   const probability = pool?.probability || 0;
+  const availablePoints = user?.points ?? 0;
+  const exceedsBalance = !!user && amount > availablePoints;
 
   const handleBet = () => {
-    if (!amount || amount <= 0) return;
+    if (!amount || amount <= 0 || exceedsBalance) return;
     placeBet({ market_id: market.id, outcome_index: selectedOutcome, amount });
   };
 
@@ -28,7 +32,6 @@ export const BetPanel = ({ market }: { market: MarketWithPools }) => {
     <div className="border rounded-lg p-4 bg-card space-y-4">
       <h3 className="font-semibold">Place a Bet</h3>
 
-      {/* Outcome Selection */}
       <div className="space-y-2">
         <label className="text-sm font-medium">Select Outcome</label>
         <div className="flex gap-2 flex-wrap">
@@ -48,7 +51,6 @@ export const BetPanel = ({ market }: { market: MarketWithPools }) => {
         </div>
       </div>
 
-      {/* Probability & Pool Info */}
       <div className="bg-secondary p-3 rounded-lg space-y-2 text-sm">
         <div className="flex justify-between">
           <span>Current Probability:</span>
@@ -60,35 +62,40 @@ export const BetPanel = ({ market }: { market: MarketWithPools }) => {
         </div>
       </div>
 
-      {/* Amount Input */}
       <div className="space-y-2">
         <label className="text-sm font-medium">Amount (points)</label>
         <input
           type="number"
           min="1"
+          max={user?.points}
           value={amount}
           onChange={(e) => setAmount(Number(e.target.value))}
           className="w-full px-3 py-2 border rounded-lg"
           placeholder="Enter amount"
         />
+        {user && (
+          <p className="text-xs text-muted-foreground">Available: {availablePoints} points</p>
+        )}
       </div>
 
-      {/* Payout Preview */}
-      <div className="bg-green-50 dark:bg-green-950 p-3 rounded-lg space-y-2 text-sm">
+      <div className="bg-green-200 p-3 rounded-lg space-y-2 text-sm">
         <div className="flex justify-between">
           <span>Potential Payout:</span>
-          <span className="font-semibold text-green-700 dark:text-green-300">
+          <span className="font-semibold text-green-700">
             {formatPayout(amount, probability)}
           </span>
         </div>
       </div>
 
-      {error && <div className="text-red-600 text-sm">{(error as any).message}</div>}
+      {exceedsBalance && (
+        <div className="text-red-600 text-sm">You do not have enough points for this bet.</div>
+      )}
 
-      {/* Submit Button */}
+      {errorMessage && !exceedsBalance && <div className="text-red-600 text-sm">{errorMessage}</div>}
+
       <button
         onClick={handleBet}
-        disabled={isPending || !amount || amount <= 0}
+        disabled={isPending || !amount || amount <= 0 || exceedsBalance}
         className="w-full px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 disabled:opacity-50 font-medium"
       >
         {isPending ? 'Placing Bet...' : 'Place Bet'}

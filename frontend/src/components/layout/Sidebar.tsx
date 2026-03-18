@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { categoriesAPI } from '@/api/categories';
+import { HomeIcon, LeaderboardIcon, MarketsIcon } from '@/components/shared/icons';
 import { useCommunities } from '@/hooks/useCommunities';
 
 export const Sidebar = () => {
@@ -21,21 +22,24 @@ export const Sidebar = () => {
         <nav className="space-y-2">
           <Link
             to="/"
-            className={`block px-3 py-2 rounded-lg text-sm ${isActive('/') ? 'bg-secondary font-semibold' : 'hover:bg-secondary'}`}
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${isActive('/') ? 'bg-secondary font-semibold' : 'hover:bg-secondary'}`}
           >
-            🏠 Home
+            <HomeIcon className="size-4 shrink-0" />
+            <span>Home</span>
           </Link>
           <Link
             to="/markets"
-            className={`block px-3 py-2 rounded-lg text-sm ${isActive('/markets') && location.pathname !== '/markets/create' ? 'bg-secondary font-semibold' : 'hover:bg-secondary'}`}
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${isActive('/markets') && location.pathname !== '/markets/create' ? 'bg-secondary font-semibold' : 'hover:bg-secondary'}`}
           >
-            📊 All Markets
+            <MarketsIcon className="size-4 shrink-0" />
+            <span>All Markets</span>
           </Link>
           <Link
             to="/leaderboard"
-            className={`block px-3 py-2 rounded-lg text-sm ${isActive('/leaderboard') ? 'bg-secondary font-semibold' : 'hover:bg-secondary'}`}
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${isActive('/leaderboard') ? 'bg-secondary font-semibold' : 'hover:bg-secondary'}`}
           >
-            🏆 Leaderboard
+            <LeaderboardIcon className="size-4 shrink-0" />
+            <span>Leaderboard</span>
           </Link>
         </nav>
 
