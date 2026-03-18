@@ -2,7 +2,12 @@ import { Link } from 'react-router-dom';
 import { MarketsIcon, MembersIcon } from '@/components/shared/icons';
 import type { Community } from '@/types';
 
-export const CommunityCard = ({ community }: { community: Community }) => {
+type CommunityCardData = Community & {
+  member_count?: number;
+  market_count?: number;
+};
+
+export const CommunityCard = ({ community }: { community: CommunityCardData }) => {
   return (
     <Link to={`/communities/${community.id}`}>
       <div className="border rounded-lg p-4 hover:shadow-lg transition-shadow bg-card">

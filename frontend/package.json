@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "generate:types": "cd .. && cargo test -p backend export_bindings",
     "lint": "eslint .",
     "preview": "vite preview"
   },

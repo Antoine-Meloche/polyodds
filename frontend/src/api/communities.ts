@@ -1,5 +1,14 @@
 import client from './client';
-import type { Community, CommunityMember, Market } from '@/types';
+import type {
+  Community,
+  CommunityDetailResponse,
+  CommunityListResponse,
+  CommunityMembersResponse,
+  CreateCommunityRequest,
+  MarketsResponse,
+  RoleResponse,
+  UpdateCommunityRequest,
+} from '@/types';
 
 interface FetchCommunitiesParams {
   search?: string;
@@ -19,33 +28,22 @@ interface FetchCommunityMarketsParams {
 }
 
 export const communitiesAPI = {
-  fetchCommunities: async (params: FetchCommunitiesParams): Promise<{ communities: Community[]; total: number }> => {
+  fetchCommunities: async (params: FetchCommunitiesParams): Promise<CommunityListResponse> => {
     const res = await client.get('/communities', { params });
     return res.data;
   },
 
-  fetchCommunity: async (id: string): Promise<Community> => {
+  fetchCommunity: async (id: string): Promise<CommunityDetailResponse> => {
     const res = await client.get(`/communities/${id}`);
     return res.data;
   },
 
-  createCommunity: async (data: {
-    name: string;
-    description: string;
-    is_private: boolean;
-  }): Promise<Community> => {
+  createCommunity: async (data: CreateCommunityRequest): Promise<Community> => {
     const res = await client.post('/communities', data);
     return res.data;
   },
 
-  updateCommunity: async (
-    id: string,
-    data: {
-      name?: string;
-      description?: string;
-      is_private?: boolean;
-    }
-  ): Promise<Community> => {
+  updateCommunity: async (id: string, data: UpdateCommunityRequest): Promise<Community> => {
     const res = await client.patch(`/communities/${id}`, data);
     return res.data;
   },
@@ -54,7 +52,7 @@ export const communitiesAPI = {
     await client.delete(`/communities/${id}`);
   },
 
-  joinCommunity: async (id: string): Promise<{ role: string }> => {
+  joinCommunity: async (id: string): Promise<RoleResponse> => {
     const res = await client.post(`/communities/${id}/join`);
     return res.data;
   },
@@ -63,7 +61,7 @@ export const communitiesAPI = {
     await client.delete(`/communities/${id}/leave`);
   },
 
-  fetchMembers: async (id: string, params: FetchCommunityMembersParams): Promise<{ members: CommunityMember[]; total: number }> => {
+  fetchMembers: async (id: string, params: FetchCommunityMembersParams): Promise<CommunityMembersResponse> => {
     const res = await client.get(`/communities/${id}/members`, { params });
     return res.data;
   },
@@ -75,7 +73,7 @@ export const communitiesAPI = {
   fetchCommunityMarkets: async (
     id: string,
     params: FetchCommunityMarketsParams
-  ): Promise<{ markets: Market[]; total: number }> => {
+  ): Promise<MarketsResponse> => {
     const res = await client.get(`/communities/${id}/markets`, { params });
     return res.data;
   },

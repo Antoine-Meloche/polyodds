@@ -3,11 +3,16 @@ import { CommunityCard } from './CommunityCard';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
 
+type CommunityListItem = Community & {
+  member_count?: number;
+  market_count?: number;
+};
+
 export const CommunityList = ({
   communities,
   isLoading,
 }: {
-  communities: Community[];
+  communities: CommunityListItem[];
   isLoading: boolean;
 }) => {
   if (isLoading) return <LoadingSpinner />;

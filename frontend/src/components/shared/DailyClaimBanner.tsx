@@ -8,9 +8,7 @@ export const DailyClaimBanner = () => {
 
   if (!user) return null;
 
-  const lastClaimAt = new Date(user.last_claim_at);
-  const nextClaimAt = new Date(lastClaimAt.getTime() + 24 * 60 * 60 * 1000);
-  const canClaim = new Date() >= nextClaimAt;
+  const canClaim = !user.last_claim_at || new Date() >= new Date(new Date(user.last_claim_at).getTime() + 24 * 60 * 60 * 1000);
 
   if (!canClaim) return null;
 

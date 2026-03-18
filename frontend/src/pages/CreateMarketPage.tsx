@@ -32,7 +32,7 @@ export const CreateMarketPage = () => {
         title,
         description,
         category_id: categoryId,
-        community_id: communityId || undefined,
+        community_id: communityId || null,
         outcomes,
       }),
     onSuccess: (market) => {

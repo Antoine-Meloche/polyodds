@@ -1,14 +1,15 @@
 import client from './client';
-import type { Category } from '@/types';
+import type { CategoriesResponse, Category, CategoryCreateRequest } from '@/types';
 
 export const categoriesAPI = {
-  fetchCategories: async (): Promise<{ categories: Category[] }> => {
+  fetchCategories: async (): Promise<CategoriesResponse> => {
     const res = await client.get('/categories');
     return res.data;
   },
 
   createCategory: async (name: string, slug: string): Promise<Category> => {
-    const res = await client.post('/categories', { name, slug });
+    const payload: CategoryCreateRequest = { name, slug };
+    const res = await client.post('/categories', payload);
     return res.data;
   },
 };

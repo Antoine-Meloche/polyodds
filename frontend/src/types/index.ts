@@ -1,129 +1,48 @@
-/* Auth */
-export interface User {
-  id: string;
-  username: string;
-  points: number;
-  created_at: string;
-  last_claim_at: string;
-  stats?: {
-    markets_created: number;
-    bets_placed: number;
-    bets_won: number;
-  };
-}
+export type { AuthResponse } from './generated/auth/AuthResponse';
+export type { DailyClaimResponse } from './generated/auth/DailyClaimResponse';
+export type { LoginRequest } from './generated/auth/LoginRequest';
+export type { RegisterRequest } from './generated/auth/RegisterRequest';
 
-export interface AuthResponse {
-  token: string;
-  user: User;
-}
+export type { CategoriesResponse } from './generated/categories/CategoriesResponse';
+export type { Category } from './generated/categories/Category';
+export type { CategoryCreateRequest } from './generated/categories/CategoryCreateRequest';
 
-export interface DailyClaimResponse {
-  points_earned: number;
-  new_balance: number;
-  next_claim_at: string;
-}
+export type { Community } from './generated/communities/Community';
+export type { CommunityDetailResponse } from './generated/communities/CommunityDetailResponse';
+export type { CommunityListResponse } from './generated/communities/CommunityListResponse';
+export type { CommunityMember } from './generated/communities/CommunityMember';
+export type { CommunityMembersResponse } from './generated/communities/CommunityMembersResponse';
+export type { CreateCommunityRequest } from './generated/communities/CreateCommunityRequest';
+export type { InviteMemberRequest } from './generated/communities/InviteMemberRequest';
+export type { RoleResponse } from './generated/communities/RoleResponse';
+export type { UpdateCommunityRequest } from './generated/communities/UpdateCommunityRequest';
 
-/* Categories */
-export interface Category {
-  id: string;
-  name: string;
-  slug: string;
-}
+export type { Bet } from './generated/markets/Bet';
+export type { BetResponse } from './generated/markets/BetResponse';
+export type { CreateMarketRequest } from './generated/markets/CreateMarketRequest';
+export type { Market } from './generated/markets/Market';
+export type { MarketHistoryResponse } from './generated/markets/MarketHistoryResponse';
+export type { MarketPool } from './generated/markets/MarketPool';
+export type { MarketsResponse } from './generated/markets/MarketsResponse';
+export type { MarketWithPools } from './generated/markets/MarketWithPools';
+export type { PlaceBetRequest } from './generated/markets/PlaceBetRequest';
+export type { ProbabilitySnapshot } from './generated/markets/ProbabilitySnapshot';
+export type { ResolveMarketRequest } from './generated/markets/ResolveMarketRequest';
+export type { UpdateMarketRequest } from './generated/markets/UpdateMarketRequest';
+export type { UserPosition } from './generated/markets/UserPosition';
 
-/* Communities */
-export interface Community {
-  id: string;
-  name: string;
-  description: string;
-  is_private: boolean;
-  creator_id: string;
-  created_at: string;
-  member_count?: number;
-  market_count?: number;
-  is_member?: boolean;
-  role?: 'admin' | 'member';
-}
+export type { BetsResponse } from './generated/users/BetsResponse';
+export type { LeaderboardEntry } from './generated/users/LeaderboardEntry';
+export type { LeaderboardResponse } from './generated/users/LeaderboardResponse';
+export type { User } from './generated/users/User';
+export type { UserStats } from './generated/users/UserStats';
+export type { UserWithStats } from './generated/users/UserWithStats';
 
-export interface CommunityMember {
-  community_id: string;
-  user_id: string;
-  role: 'admin' | 'member';
-  joined_at: string;
-}
-
-/* Markets */
-export interface Market {
-  id: string;
-  title: string;
-  description: string;
-  category_id: string;
-  community_id?: string;
-  creator_id: string;
-  outcomes: string[];
-  status: 'open' | 'closed' | 'resolved';
-  winning_outcome_index?: number;
-  created_at: string;
-}
-
-export interface MarketWithPools extends Market {
-  outcomes: string[];
-  pools: {
-    outcome: string;
-    total_points: number;
-    probability: number;
-  }[];
-  total_volume: number;
-  user_position?: {
-    outcome_index: number;
-    amount: number;
-  } | null;
-}
-
-export interface ProbabilitySnapshot {
-  recorded_at: string;
-  probabilities: number[];
-}
-
-export interface MarketHistory {
-  history: ProbabilitySnapshot[];
-}
-
-/* Bets */
-export interface Bet {
-  id: string;
-  market_id: string;
-  user_id: string;
-  outcome_index: number;
-  amount: number;
-  created_at: string;
-}
-
-export interface BetResponse {
-  bet: Bet;
-  new_balance: number;
-  probabilities_after: number[];
-}
-
-/* Leaderboard */
-export interface LeaderboardEntry {
-  rank: number;
-  id: string;
-  username: string;
-  points: number;
-}
-
-export interface LeaderboardResponse {
-  users: LeaderboardEntry[];
-  total: number;
-}
-
-/* Pagination */
 export interface PaginatedResponse<T> {
   data: T[];
   total: number;
 }
 
-/* Error */
 export interface ErrorResponse {
   error: string;
   code: string;
