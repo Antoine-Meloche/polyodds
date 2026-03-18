@@ -62,7 +62,6 @@ export interface Market {
   outcomes: string[];
   status: 'open' | 'closed' | 'resolved';
   winning_outcome_index?: number;
-  close_at: string;
   created_at: string;
 }
 

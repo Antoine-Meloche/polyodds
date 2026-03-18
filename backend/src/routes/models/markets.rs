@@ -14,7 +14,6 @@ pub struct Market {
     pub outcomes: Vec<String>,
     pub status: String,
     pub winning_outcome_index: Option<i32>,
-    pub close_at: DateTime<Utc>,
     pub created_at: DateTime<Utc>,
 }
 
@@ -92,14 +91,12 @@ pub struct CreateMarketRequest {
     pub category_id: Uuid,
     pub community_id: Option<Uuid>,
     pub outcomes: Vec<String>,
-    pub close_at: DateTime<Utc>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct UpdateMarketRequest {
     pub title: Option<String>,
     pub description: Option<String>,
-    pub close_at: Option<DateTime<Utc>>,
 }
 
 #[derive(Debug, Deserialize)]

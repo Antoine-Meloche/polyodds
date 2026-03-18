@@ -1,0 +1,2 @@
+ALTER TABLE markets
+DROP COLUMN IF EXISTS close_at;

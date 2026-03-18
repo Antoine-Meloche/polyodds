@@ -9,11 +9,22 @@ export const BetPanel = ({ market }: { market: MarketWithPools }) => {
   const [selectedOutcome, setSelectedOutcome] = useState<number>(0);
   const { user } = useAuth();
   const { placeBet, isPending, errorMessage } = useBet();
+  const isCreator = !!user && user.id === market.creator_id;
 
   if (market.status !== 'open') {
     return (
       <div className="border rounded-lg p-4 bg-card">
         <p className="text-center text-muted-foreground">This market is {market.status}</p>
+      </div>
+    );
+  }
+
+  if (isCreator) {
+    return (
+      <div className="border rounded-lg p-4 bg-card">
+        <p className="text-center text-muted-foreground">
+          As the market creator, you cannot place bets on your own market.
+        </p>
       </div>
     );
   }

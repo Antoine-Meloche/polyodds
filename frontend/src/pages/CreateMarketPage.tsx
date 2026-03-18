@@ -15,7 +15,6 @@ export const CreateMarketPage = () => {
   const [categoryId, setCategoryId] = useState('');
   const [communityId, setCommunityId] = useState('');
   const [outcomes, setOutcomes] = useState(['Yes', 'No']);
-  const [closeAt, setCloseAt] = useState('');
 
   const { data: categories } = useQuery({
     queryKey: ['categories'],
@@ -35,7 +34,6 @@ export const CreateMarketPage = () => {
         category_id: categoryId,
         community_id: communityId || undefined,
         outcomes,
-        close_at: new Date(closeAt).toISOString(),
       }),
     onSuccess: (market) => {
       navigate(`/markets/${market.id}`);
@@ -44,7 +42,7 @@ export const CreateMarketPage = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title || !categoryId || outcomes.length < 2 || !closeAt) {
+    if (!title || !categoryId || outcomes.length < 2) {
       alert('Please fill all required fields');
       return;
     }
@@ -173,18 +171,6 @@ export const CreateMarketPage = () => {
               </div>
             ))}
           </div>
-        </div>
-
-        {/* Close At */}
-        <div>
-          <label className="block text-sm font-medium mb-2">Closes At *</label>
-          <input
-            type="datetime-local"
-            value={closeAt}
-            onChange={(e) => setCloseAt(e.target.value)}
-            className="w-full px-3 py-2 border rounded-lg"
-            required
-          />
         </div>
 
         {/* Submit */}

@@ -23,7 +23,7 @@ export const MarketCard = ({ market }: MarketCardProps) => {
           </div>
 
           <div className="flex items-center justify-between pt-2 border-t text-xs text-muted-foreground">
-            <span>{formatRelative(market.close_at)}</span>
+            <span>{formatRelative(market.created_at)}</span>
             <span>Status: {market.status}</span>
           </div>
         </div>

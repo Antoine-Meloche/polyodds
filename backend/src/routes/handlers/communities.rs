@@ -363,7 +363,7 @@ pub async fn community_markets(
 
     let markets = sqlx::query_as::<_, Market>(
         "SELECT id, title, description, category_id, community_id, creator_id, outcomes, status,
-                winning_outcome_index, close_at, created_at
+                                winning_outcome_index, created_at
          FROM markets
          WHERE community_id = $1
            AND ($2::text IS NULL OR status = $2)

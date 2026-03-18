@@ -23,7 +23,6 @@ use axum::{
     extract::{Path, Query, State},
     Json,
 };
-use chrono::Utc;
 use sqlx::FromRow;
 use uuid::Uuid;
 
@@ -46,13 +45,12 @@ pub async fn list_markets(
 
     let order_clause = match sort {
         "volume" => "COALESCE((SELECT SUM(amount) FROM bets b WHERE b.market_id = m.id), 0) DESC, m.created_at DESC",
-        "closing_soon" => "m.close_at ASC, m.created_at DESC",
         _ => "m.created_at DESC",
     };
 
     let sql = format!(
         "SELECT m.id, m.title, m.description, m.category_id, m.community_id, m.creator_id, m.outcomes, m.status,
-                m.winning_outcome_index, m.close_at, m.created_at
+            m.winning_outcome_index, m.created_at
          FROM markets m
          LEFT JOIN communities c ON c.id = m.community_id
          WHERE ($1::uuid IS NULL OR m.category_id = $1)
@@ -106,7 +104,6 @@ struct MarketRow {
     outcomes: Vec<String>,
     status: String,
     winning_outcome_index: Option<i32>,
-    close_at: chrono::DateTime<chrono::Utc>,
     created_at: chrono::DateTime<chrono::Utc>,
     pools: Vec<i64>,
     community_private: Option<bool>,
@@ -121,7 +118,7 @@ pub async fn get_market(
 
     let row = sqlx::query_as::<_, MarketRow>(
         "SELECT m.id, m.title, m.description, m.category_id, m.community_id, m.creator_id,
-                m.outcomes, m.status, m.winning_outcome_index, m.close_at, m.created_at,
+            m.outcomes, m.status, m.winning_outcome_index, m.created_at,
                 m.pools, c.is_private AS community_private
          FROM markets m
          LEFT JOIN communities c ON c.id = m.community_id
@@ -191,7 +188,6 @@ pub async fn get_market(
         outcomes: row.outcomes,
         status: row.status,
         winning_outcome_index: row.winning_outcome_index,
-        close_at: row.close_at,
         created_at: row.created_at,
     };
 
@@ -211,9 +207,6 @@ pub async fn create_market(
     if payload.outcomes.len() < 2 {
         return Err(AppError::Validation("Market needs at least two outcomes".to_string()));
     }
-    if payload.close_at <= Utc::now() {
-        return Err(AppError::Validation("close_at must be in the future".to_string()));
-    }
 
     if let Some(community_id) = payload.community_id {
         let allowed = is_community_member(&state, auth.user_id, community_id).await?;
@@ -225,10 +218,10 @@ pub async fn create_market(
     let pools = vec![0_i64; payload.outcomes.len()];
 
     let market = sqlx::query_as::<_, Market>(
-        "INSERT INTO markets (title, description, category_id, community_id, creator_id, outcomes, status, pools, close_at)
-         VALUES ($1, $2, $3, $4, $5, $6, 'open', $7, $8)
+        "INSERT INTO markets (title, description, category_id, community_id, creator_id, outcomes, status, pools)
+         VALUES ($1, $2, $3, $4, $5, $6, 'open', $7)
          RETURNING id, title, description, category_id, community_id, creator_id, outcomes, status,
-                   winning_outcome_index, close_at, created_at",
+                   winning_outcome_index, created_at",
     )
     .bind(payload.title.trim())
     .bind(payload.description.trim())
@@ -237,7 +230,6 @@ pub async fn create_market(
     .bind(auth.user_id)
     .bind(payload.outcomes)
     .bind(pools)
-    .bind(payload.close_at)
     .fetch_one(&state.pool)
     .await?;
 
@@ -252,7 +244,7 @@ pub async fn update_market(
 ) -> AppResult<Json<Market>> {
     let market = sqlx::query_as::<_, Market>(
         "SELECT id, title, description, category_id, community_id, creator_id, outcomes, status,
-                winning_outcome_index, close_at, created_at
+                winning_outcome_index, created_at
          FROM markets WHERE id = $1",
     )
     .bind(id)
@@ -271,16 +263,14 @@ pub async fn update_market(
         "UPDATE markets
          SET title = COALESCE($2, title),
              description = COALESCE($3, description),
-             close_at = COALESCE($4, close_at),
              updated_at = NOW()
          WHERE id = $1
          RETURNING id, title, description, category_id, community_id, creator_id, outcomes, status,
-                   winning_outcome_index, close_at, created_at",
+                   winning_outcome_index, created_at",
     )
     .bind(id)
     .bind(payload.title)
     .bind(payload.description)
-    .bind(payload.close_at)
     .fetch_one(&state.pool)
     .await?;
 
@@ -297,7 +287,7 @@ pub async fn resolve_market(
 
     let row = sqlx::query_as::<_, MarketRow>(
         "SELECT m.id, m.title, m.description, m.category_id, m.community_id, m.creator_id,
-                m.outcomes, m.status, m.winning_outcome_index, m.close_at, m.created_at,
+            m.outcomes, m.status, m.winning_outcome_index, m.created_at,
                 m.pools, c.is_private AS community_private
          FROM markets m
          LEFT JOIN communities c ON c.id = m.community_id
@@ -318,11 +308,6 @@ pub async fn resolve_market(
     }
     if row.status == "resolved" {
         return Err(AppError::BadRequest("Market already resolved".to_string()));
-    }
-    if row.status != "closed" && Utc::now() < row.close_at {
-        return Err(AppError::BadRequest(
-            "Market must be closed before resolution".to_string(),
-        ));
     }
     if payload.winning_outcome_index < 0
         || payload.winning_outcome_index as usize >= row.outcomes.len()
@@ -369,7 +354,7 @@ pub async fn resolve_market(
 
     let resolved = sqlx::query_as::<_, Market>(
         "SELECT id, title, description, category_id, community_id, creator_id, outcomes, status,
-                winning_outcome_index, close_at, created_at
+                winning_outcome_index, created_at
          FROM markets WHERE id = $1",
     )
     .bind(id)
@@ -447,7 +432,7 @@ pub async fn place_bet(
 
     let row = sqlx::query_as::<_, MarketRow>(
         "SELECT m.id, m.title, m.description, m.category_id, m.community_id, m.creator_id,
-                m.outcomes, m.status, m.winning_outcome_index, m.close_at, m.created_at,
+            m.outcomes, m.status, m.winning_outcome_index, m.created_at,
                 m.pools, c.is_private AS community_private
          FROM markets m
          LEFT JOIN communities c ON c.id = m.community_id
@@ -459,11 +444,14 @@ pub async fn place_bet(
     .await?
     .ok_or(AppError::NotFound)?;
 
+    if row.creator_id == auth.user_id {
+        return Err(AppError::BadRequest(
+            "Market creators cannot bet on their own market".to_string(),
+        ));
+    }
+
     if row.status != "open" {
         return Err(AppError::BadRequest("Market is not open".to_string()));
-    }
-    if Utc::now() > row.close_at {
-        return Err(AppError::BadRequest("Market already closed by time".to_string()));
     }
     if payload.outcome_index < 0 || payload.outcome_index as usize >= row.outcomes.len() {
         return Err(AppError::Validation("Invalid outcome_index".to_string()));

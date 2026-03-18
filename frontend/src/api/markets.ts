@@ -6,7 +6,7 @@ interface FetchMarketsParams {
   community_id?: string;
   status?: 'open' | 'closed' | 'resolved';
   search?: string;
-  sort?: 'volume' | 'newest' | 'closing_soon';
+  sort?: 'volume' | 'newest';
   limit?: number;
   offset?: number;
 }
@@ -28,7 +28,6 @@ export const marketsAPI = {
     category_id: string;
     community_id?: string;
     outcomes: string[];
-    close_at: string;
   }): Promise<Market> => {
     const res = await client.post('/markets', data);
     return res.data;
@@ -39,7 +38,6 @@ export const marketsAPI = {
     data: {
       title?: string;
       description?: string;
-      close_at?: string;
     }
   ): Promise<Market> => {
     const res = await client.patch(`/markets/${id}`, data);

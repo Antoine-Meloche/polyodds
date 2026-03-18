@@ -6,7 +6,7 @@ interface UseMarketsParams {
   community_id?: string;
   status?: 'open' | 'closed' | 'resolved';
   search?: string;
-  sort?: 'volume' | 'newest' | 'closing_soon';
+  sort?: 'volume' | 'newest';
   limit?: number;
   offset?: number;
 }

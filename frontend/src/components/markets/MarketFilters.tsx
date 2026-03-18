@@ -4,7 +4,7 @@ import { categoriesAPI } from '@/api/categories';
 export interface MarketFiltersState {
   category_id?: string;
   status?: 'open' | 'closed' | 'resolved';
-  sort?: 'volume' | 'newest' | 'closing_soon';
+  sort?: 'volume' | 'newest';
   search?: string;
 }
 
@@ -68,7 +68,6 @@ export const MarketFilters = ({
       >
         <option value="newest">Newest</option>
         <option value="volume">Volume</option>
-        <option value="closing_soon">Closing Soon</option>
       </select>
 
       <input
