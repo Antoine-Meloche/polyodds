@@ -20,7 +20,7 @@ pub async fn build_app(config: AppConfig) -> anyhow::Result<Router> {
         .await?;
 
     // Keep local/dev startup resilient by ensuring schema migrations are applied.
-    sqlx::migrate!("../../migrations").run(&pool).await?;
+    sqlx::migrate!("../migrations").run(&pool).await?;
 
     let state = AppState {
         pool,

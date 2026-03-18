@@ -162,7 +162,7 @@ pub async fn get_market(
 
     let user_position = if let Some(auth) = maybe_auth_user {
         sqlx::query_as::<_, (i32, i64)>(
-            "SELECT outcome_index, SUM(amount) AS amount
+            "SELECT outcome_index, SUM(amount)::bigint AS amount
              FROM bets
              WHERE market_id = $1 AND user_id = $2
              GROUP BY outcome_index
@@ -345,7 +345,7 @@ pub async fn resolve_market(
 
     if total_pool > 0 && winning_pool > 0 {
         let winners = sqlx::query_as::<_, (Uuid, i64)>(
-            "SELECT user_id, SUM(amount) AS stake
+            "SELECT user_id, SUM(amount)::bigint AS stake
              FROM bets
              WHERE market_id = $1 AND outcome_index = $2
              GROUP BY user_id",
