@@ -1,12 +1,12 @@
 pub mod auth;
 pub mod config;
 pub mod error;
-pub mod handlers;
-pub mod models;
+pub mod routes;
 pub mod state;
 
 use axum::{routing::{delete, get, post}, Router};
 use config::AppConfig;
+use routes::handlers::{auth as auth_handlers, categories, communities, markets, users};
 use sqlx::postgres::PgPoolOptions;
 use state::AppState;
 use std::time::Duration;
@@ -28,32 +28,32 @@ pub async fn build_app(config: AppConfig) -> anyhow::Result<Router> {
     };
 
     let app = Router::new()
-        .route("/api/auth/register", post(handlers::register))
-        .route("/api/auth/login", post(handlers::login))
-        .route("/api/auth/me", get(handlers::me))
-        .route("/api/auth/daily-claim", post(handlers::daily_claim))
-        .route("/api/categories", get(handlers::list_categories).post(handlers::create_category))
-        .route("/api/users/:id", get(handlers::get_user))
-        .route("/api/users/:id/bets", get(handlers::get_user_bets))
-        .route("/api/leaderboard", get(handlers::leaderboard))
-        .route("/api/markets", get(handlers::list_markets).post(handlers::create_market))
-        .route("/api/markets/:id", get(handlers::get_market).patch(handlers::update_market))
-        .route("/api/markets/:id/resolve", post(handlers::resolve_market))
-        .route("/api/markets/:id/history", get(handlers::market_history))
-        .route("/api/markets/:id/bets", get(handlers::market_bets_for_me))
-        .route("/api/markets/:id/bet", post(handlers::place_bet))
-        .route("/api/communities", get(handlers::list_communities).post(handlers::create_community))
+        .route("/api/auth/register", post(auth_handlers::register))
+        .route("/api/auth/login", post(auth_handlers::login))
+        .route("/api/auth/me", get(auth_handlers::me))
+        .route("/api/auth/daily-claim", post(auth_handlers::daily_claim))
+        .route("/api/categories", get(categories::list_categories).post(categories::create_category))
+        .route("/api/users/:id", get(users::get_user))
+        .route("/api/users/:id/bets", get(users::get_user_bets))
+        .route("/api/leaderboard", get(users::leaderboard))
+        .route("/api/markets", get(markets::list_markets).post(markets::create_market))
+        .route("/api/markets/:id", get(markets::get_market).patch(markets::update_market))
+        .route("/api/markets/:id/resolve", post(markets::resolve_market))
+        .route("/api/markets/:id/history", get(markets::market_history))
+        .route("/api/markets/:id/bets", get(markets::market_bets_for_me))
+        .route("/api/markets/:id/bet", post(markets::place_bet))
+        .route("/api/communities", get(communities::list_communities).post(communities::create_community))
         .route(
             "/api/communities/:id",
-            get(handlers::get_community)
-                .patch(handlers::update_community)
-                .delete(handlers::delete_community),
+            get(communities::get_community)
+                .patch(communities::update_community)
+                .delete(communities::delete_community),
         )
-        .route("/api/communities/:id/join", post(handlers::join_community))
-        .route("/api/communities/:id/leave", delete(handlers::leave_community))
-        .route("/api/communities/:id/members", get(handlers::community_members))
-        .route("/api/communities/:id/invite", post(handlers::invite_member))
-        .route("/api/communities/:id/markets", get(handlers::community_markets))
+        .route("/api/communities/:id/join", post(communities::join_community))
+        .route("/api/communities/:id/leave", delete(communities::leave_community))
+        .route("/api/communities/:id/members", get(communities::community_members))
+        .route("/api/communities/:id/invite", post(communities::invite_member))
+        .route("/api/communities/:id/markets", get(communities::community_markets))
         .layer(
             CorsLayer::new()
                 .allow_origin([config.frontend_origin.parse()?])
