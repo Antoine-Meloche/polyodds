@@ -6,7 +6,7 @@ import { useAuthStore } from '@/stores/authStore';
 export const LoginPage = () => {
   const navigate = useNavigate();
   const { setAuth } = useAuthStore();
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -17,7 +17,7 @@ export const LoginPage = () => {
     setIsLoading(true);
 
     try {
-      const response = await authAPI.login(email, password);
+      const response = await authAPI.login(username, password);
       setAuth(response.token, response.user);
       navigate('/');
     } catch (err: any) {
@@ -37,11 +37,11 @@ export const LoginPage = () => {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Email</label>
+              <label className="block text-sm font-medium mb-1">Username</label>
               <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 className="w-full px-3 py-2 border rounded-lg"
                 required
               />

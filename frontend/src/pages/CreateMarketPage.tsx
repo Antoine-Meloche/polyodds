@@ -35,7 +35,7 @@ export const CreateMarketPage = () => {
         category_id: categoryId,
         community_id: communityId || undefined,
         outcomes,
-        close_at: closeAt,
+        close_at: new Date(closeAt).toISOString(),
       }),
     onSuccess: (market) => {
       navigate(`/markets/${market.id}`);

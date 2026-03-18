@@ -115,15 +115,6 @@ pub fn decode_token(token: &str, secret: &str) -> Result<Claims, AppError> {
     Ok(token_data.claims)
 }
 
-pub fn validate_email(email: &str) -> bool {
-    let email = email.trim();
-    if email.is_empty() || email.len() > 254 {
-        return false;
-    }
-
-    email.contains('@') && email.split('@').count() == 2
-}
-
 pub fn validate_username(username: &str) -> bool {
     let name = username.trim();
     !name.is_empty() && name.len() >= 3 && name.len() <= 32

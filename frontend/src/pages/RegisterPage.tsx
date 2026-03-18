@@ -7,18 +7,17 @@ export const RegisterPage = () => {
   const navigate = useNavigate();
   const { setAuth } = useAuthStore();
   const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SubmitEvent) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
 
     try {
-      const response = await authAPI.register(username, email, password);
+      const response = await authAPI.register(username, password);
       setAuth(response.token, response.user);
       navigate('/');
     } catch (err: any) {
@@ -43,17 +42,6 @@ export const RegisterPage = () => {
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full px-3 py-2 border rounded-lg"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Email</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-3 py-2 border rounded-lg"
                 required
               />

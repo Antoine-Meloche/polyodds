@@ -2,7 +2,6 @@
 export interface User {
   id: string;
   username: string;
-  email: string;
   points: number;
   created_at: string;
   last_claim_at: string;

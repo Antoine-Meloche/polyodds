@@ -1,5 +1,5 @@
 use crate::{
-    auth::{encode_token, hash_password, validate_email, validate_password, validate_username, verify_password, AuthUser, MaybeAuthUser},
+    auth::{encode_token, hash_password, validate_password, validate_username, verify_password, AuthUser, MaybeAuthUser},
     error::{AppError, AppResult},
     models::*,
     state::AppState,
@@ -27,7 +27,6 @@ fn page_offset(offset: Option<i64>) -> i64 {
 struct AuthUserRow {
     id: Uuid,
     username: String,
-    email: String,
     password_hash: String,
     points: i64,
     created_at: chrono::DateTime<chrono::Utc>,
@@ -39,7 +38,6 @@ impl From<AuthUserRow> for User {
         Self {
             id: value.id,
             username: value.username,
-            email: value.email,
             points: value.points,
             created_at: value.created_at,
             last_claim_at: value.last_claim_at,
@@ -54,28 +52,26 @@ pub async fn register(
     if !validate_username(&payload.username) {
         return Err(AppError::Validation("Username must be 3-32 chars".to_string()));
     }
-    if !validate_email(&payload.email) {
-        return Err(AppError::Validation("Invalid email format".to_string()));
-    }
     if !validate_password(&payload.password) {
         return Err(AppError::Validation("Password must be at least 8 chars".to_string()));
     }
 
     let password_hash = hash_password(&payload.password)?;
+    let generated_email = format!("{}@local.polyodds", payload.username.trim());
 
     let inserted = sqlx::query_as::<_, AuthUserRow>(
         "INSERT INTO users (username, email, password_hash)
          VALUES ($1, $2, $3)
-         RETURNING id, username, email, password_hash, points, created_at, last_claim_at",
+         RETURNING id, username, password_hash, points, created_at, last_claim_at",
     )
     .bind(payload.username.trim())
-    .bind(payload.email.trim().to_lowercase())
+    .bind(generated_email)
     .bind(password_hash)
     .fetch_one(&state.pool)
     .await
     .map_err(|e| match &e {
         sqlx::Error::Database(db_err) if db_err.code().as_deref() == Some("23505") => {
-            AppError::Conflict("Username or email already exists".to_string())
+            AppError::Conflict("Username already exists".to_string())
         }
         _ => AppError::Db(e),
     })?;
@@ -91,11 +87,11 @@ pub async fn login(
     Json(payload): Json<LoginRequest>,
 ) -> AppResult<Json<AuthResponse>> {
     let auth_user = sqlx::query_as::<_, AuthUserRow>(
-        "SELECT id, username, email, password_hash, points, created_at, last_claim_at
+        "SELECT id, username, password_hash, points, created_at, last_claim_at
          FROM users
-         WHERE email = $1",
+         WHERE username = $1",
     )
-    .bind(payload.email.trim().to_lowercase())
+    .bind(payload.username.trim())
     .fetch_optional(&state.pool)
     .await?
     .ok_or(AppError::Unauthorized)?;
@@ -113,7 +109,7 @@ pub async fn login(
 
 pub async fn me(State(state): State<AppState>, auth: AuthUser) -> AppResult<Json<User>> {
     let user = sqlx::query_as::<_, User>(
-        "SELECT id, username, email, points, created_at, last_claim_at
+        "SELECT id, username, points, created_at, last_claim_at
          FROM users
          WHERE id = $1",
     )
@@ -190,11 +186,8 @@ pub async fn list_categories(State(state): State<AppState>) -> AppResult<Json<Ca
 
 pub async fn create_category(
     State(state): State<AppState>,
-    auth: AuthUser,
     Json(payload): Json<CategoryCreateRequest>,
 ) -> AppResult<Json<Category>> {
-    require_platform_admin(&state, auth.user_id).await?;
-
     let category = sqlx::query_as::<_, Category>(
         "INSERT INTO categories (name, slug)
          VALUES ($1, $2)
@@ -219,7 +212,7 @@ pub async fn get_user(
     Path(id): Path<Uuid>,
 ) -> AppResult<Json<UserWithStats>> {
     let user = sqlx::query_as::<_, User>(
-        "SELECT id, username, email, points, created_at, last_claim_at
+        "SELECT id, username, points, created_at, last_claim_at
          FROM users
          WHERE id = $1",
     )
@@ -584,7 +577,7 @@ pub async fn resolve_market(
          FROM markets m
          LEFT JOIN communities c ON c.id = m.community_id
          WHERE m.id = $1
-         FOR UPDATE",
+            FOR UPDATE OF m",
     )
     .bind(id)
     .fetch_optional(&mut *tx)
@@ -734,7 +727,7 @@ pub async fn place_bet(
          FROM markets m
          LEFT JOIN communities c ON c.id = m.community_id
          WHERE m.id = $1
-         FOR UPDATE",
+            FOR UPDATE OF m",
     )
     .bind(id)
     .fetch_optional(&mut *tx)
@@ -1180,20 +1173,6 @@ pub async fn community_markets(
     .await?;
 
     Ok(Json(MarketsResponse { markets, total }))
-}
-
-async fn require_platform_admin(state: &AppState, user_id: Uuid) -> AppResult<()> {
-    let row = sqlx::query_as::<_, (bool,)>("SELECT is_admin FROM users WHERE id = $1")
-        .bind(user_id)
-        .fetch_optional(&state.pool)
-        .await?
-        .ok_or(AppError::Unauthorized)?;
-
-    if !row.0 {
-        return Err(AppError::Forbidden);
-    }
-
-    Ok(())
 }
 
 async fn ensure_community_member(state: &AppState, user_id: Uuid, community_id: Uuid) -> AppResult<()> {

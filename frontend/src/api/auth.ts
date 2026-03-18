@@ -2,13 +2,13 @@ import client from './client';
 import type { User, AuthResponse, DailyClaimResponse } from '@/types';
 
 export const authAPI = {
-  register: async (username: string, email: string, password: string): Promise<AuthResponse> => {
-    const res = await client.post('/auth/register', { username, email, password });
+  register: async (username: string, password: string): Promise<AuthResponse> => {
+    const res = await client.post('/auth/register', { username, password });
     return res.data;
   },
 
-  login: async (email: string, password: string): Promise<AuthResponse> => {
-    const res = await client.post('/auth/login', { email, password });
+  login: async (username: string, password: string): Promise<AuthResponse> => {
+    const res = await client.post('/auth/login', { username, password });
     return res.data;
   },
 

@@ -16,7 +16,7 @@ pub enum AppError {
     Conflict(String),
     #[error("Validation failed: {0}")]
     Validation(String),
-    #[error("Database error")]
+    #[error("Database error: {0}")]
     Db(#[from] sqlx::Error),
     #[error("Internal server error")]
     Internal,

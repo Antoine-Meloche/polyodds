@@ -7,7 +7,6 @@ use uuid::Uuid;
 pub struct User {
     pub id: Uuid,
     pub username: String,
-    pub email: String,
     pub points: i64,
     pub created_at: DateTime<Utc>,
     pub last_claim_at: Option<DateTime<Utc>>,
@@ -187,13 +186,12 @@ pub struct PaginationQuery {
 #[derive(Debug, Deserialize)]
 pub struct RegisterRequest {
     pub username: String,
-    pub email: String,
     pub password: String,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct LoginRequest {
-    pub email: String,
+    pub username: String,
     pub password: String,
 }
 
