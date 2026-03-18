@@ -13,7 +13,7 @@ import type {
 interface FetchMarketsParams {
   category_id?: string;
   community_id?: string;
-  status?: 'open' | 'closed' | 'resolved';
+  status?: 'ouvert' | 'fermé';
   search?: string;
   sort?: 'volume' | 'newest';
   limit?: number;

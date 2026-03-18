@@ -23,7 +23,7 @@ export const MarketsPage = () => {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold">Markets</h1>
+      <h1 className="text-3xl font-bold">Bets</h1>
 
       <MarketFilters filters={filters} onFiltersChange={handleFilterChange} />
 

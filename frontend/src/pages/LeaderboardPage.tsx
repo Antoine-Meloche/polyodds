@@ -29,17 +29,17 @@ export const LeaderboardPage = () => {
       <div>
         <h1 className="flex items-center gap-3 text-3xl font-bold">
           <LeaderboardIcon className="size-8 text-primary" />
-          <span>Leaderboard</span>
+          <span>Classement</span>
         </h1>
-        <p className="text-muted-foreground">Top points earners</p>
+        <p className="text-muted-foreground">Meilleurs gagnants de points</p>
       </div>
 
       <div className="border rounded-lg overflow-hidden">
         <table className="w-full">
           <thead>
             <tr className="border-b bg-secondary">
-              <th className="px-4 py-3 text-left text-sm font-semibold">Rank</th>
-              <th className="px-4 py-3 text-left text-sm font-semibold">User</th>
+              <th className="px-4 py-3 text-left text-sm font-semibold">Rang</th>
+              <th className="px-4 py-3 text-left text-sm font-semibold">Utilisateur</th>
               <th className="px-4 py-3 text-right text-sm font-semibold">Points</th>
             </tr>
           </thead>

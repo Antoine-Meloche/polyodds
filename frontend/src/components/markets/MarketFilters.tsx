@@ -3,7 +3,7 @@ import { categoriesAPI } from '@/api/categories';
 
 export interface MarketFiltersState {
   category_id?: string;
-  status?: 'open' | 'closed' | 'resolved';
+  status?: 'ouvert' | 'fermé';
   sort?: 'volume' | 'newest';
   search?: string;
 }
@@ -32,7 +32,7 @@ export const MarketFilters = ({
         }
         className="px-3 py-2 border rounded-lg text-sm bg-background"
       >
-        <option value="">All Categories</option>
+        <option value="">Toutes les catégories</option>
         {categoriesData?.categories.map((cat) => (
           <option key={cat.id} value={cat.id}>
             {cat.name}
@@ -50,10 +50,9 @@ export const MarketFilters = ({
         }
         className="px-3 py-2 border rounded-lg text-sm bg-background"
       >
-        <option value="">All Status</option>
-        <option value="open">Open</option>
-        <option value="closed">Closed</option>
-        <option value="resolved">Resolved</option>
+        <option value="">Tous les statuts</option>
+        <option value="open">Ouvert</option>
+        <option value="resolved">Résolu</option>
       </select>
 
       <select
@@ -66,13 +65,13 @@ export const MarketFilters = ({
         }
         className="px-3 py-2 border rounded-lg text-sm bg-background"
       >
-        <option value="newest">Newest</option>
+        <option value="newest">Plus récent</option>
         <option value="volume">Volume</option>
       </select>
 
       <input
         type="text"
-        placeholder="Search..."
+        placeholder="Rechercher..."
         value={filters.search || ''}
         onChange={(e) =>
           onFiltersChange({

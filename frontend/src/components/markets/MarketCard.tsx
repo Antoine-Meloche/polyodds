@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom';
 import type { Market } from '@/types';
-import { formatRelative } from '@/utils/dates';
 import { OutcomeBadge } from './OutcomeBadge';
 
 interface MarketCardProps {
@@ -9,7 +8,7 @@ interface MarketCardProps {
 
 export const MarketCard = ({ market }: MarketCardProps) => {
   return (
-    <Link to={`/markets/${market.id}`}>
+    <Link to={`/bets/${market.id}`}>
       <div className="border rounded-lg p-4 hover:shadow-lg transition-shadow h-full bg-card">
         <div className="space-y-3">
           <h3 className="font-semibold line-clamp-2">{market.title}</h3>
@@ -23,7 +22,6 @@ export const MarketCard = ({ market }: MarketCardProps) => {
           </div>
 
           <div className="flex items-center justify-between pt-2 border-t text-xs text-muted-foreground">
-            <span>{formatRelative(market.created_at)}</span>
             <span>Status: {market.status}</span>
           </div>
         </div>

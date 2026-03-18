@@ -11,7 +11,7 @@ export const CommunitiesPage = () => {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold">Communities</h1>
+      <h1 className="text-3xl font-bold">Communautés</h1>
 
       <CommunityList communities={data?.communities || []} isLoading={isLoading} />
 

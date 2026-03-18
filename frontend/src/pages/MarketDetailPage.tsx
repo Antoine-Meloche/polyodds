@@ -29,7 +29,7 @@ export const MarketDetailPage = () => {
   if (isLoading || !market) return <LoadingSpinner />;
 
   const isCreator = !!user && user.id === market.creator_id;
-  const canResolveNow = market.status !== 'resolved';
+  const canResolveNow = market.status !== 'fermé';
 
   const resolveErrorMessage =
     resolveMarketMutation.error instanceof AxiosError
@@ -52,24 +52,24 @@ export const MarketDetailPage = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          {/* Market Info */}
+          {/* Bet Info */}
           <div className="border rounded-lg p-4 bg-card">
-            <h2 className="font-semibold mb-3">Market Info</h2>
+            <h2 className="font-semibold mb-3">Informations du Bet</h2>
             <div className="space-y-2 text-sm">
-              <p>Status: <span className="font-medium">{market.status}</span></p>
-              <p>Total Volume: <span className="font-medium">{market.total_volume}</span></p>
+              <p>Statut: <span className="font-medium">{market.status}</span></p>
+              <p>Volume total: <span className="font-medium">{market.total_volume}</span></p>
             </div>
           </div>
 
           {/* Outcomes & Pools */}
           <div className="border rounded-lg p-4 bg-card">
-            <h2 className="font-semibold mb-3">Outcomes</h2>
+            <h2 className="font-semibold mb-3">Résultats</h2>
             <div className="space-y-3">
               {market.pools.map((pool, index) => (
                 <div key={index} className="flex items-center justify-between p-3 border rounded-lg bg-secondary">
                   <OutcomeBadge outcome={pool.outcome} index={index} />
                   <div className="text-sm space-y-1 text-right">
-                    <p className="text-muted-foreground">Pool: {pool.total_points}</p>
+                    <p className="text-muted-foreground">Bassin: {pool.total_points}</p>
                     <p className="font-semibold">{(pool.probability * 100).toFixed(1)}%</p>
                   </div>
                 </div>
@@ -79,18 +79,18 @@ export const MarketDetailPage = () => {
 
           {isCreator && (
             <div className="border rounded-lg p-4 bg-card space-y-3">
-              <h2 className="font-semibold">Admin Options</h2>
+              <h2 className="font-semibold">Options d'administration</h2>
               <p className="text-sm text-muted-foreground">
-                As the creator, you can finish this market and select the winning option.
+                En tant que créateur, vous pouvez terminer ce bet et sélectionner l'option gagnante.
               </p>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">Winning Option</label>
+                <label className="text-sm font-medium">Option gagnante</label>
                 <select
                   value={winningOutcomeIndex}
                   onChange={(e) => setWinningOutcomeIndex(Number(e.target.value))}
                   className="w-full px-3 py-2 border rounded-lg bg-background"
-                  disabled={market.status === 'resolved' || resolveMarketMutation.isPending}
+                  disabled={market.status === 'fermé' || resolveMarketMutation.isPending}
                 >
                   {market.outcomes.map((outcome, index) => (
                     <option key={outcome + index} value={index}>
@@ -106,10 +106,10 @@ export const MarketDetailPage = () => {
 
               <button
                 onClick={handleResolve}
-                disabled={!canResolveNow || market.status === 'resolved' || resolveMarketMutation.isPending}
+                disabled={!canResolveNow || market.status === 'fermé' || resolveMarketMutation.isPending}
                 className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 disabled:opacity-50 font-medium"
               >
-                {resolveMarketMutation.isPending ? 'Finishing Market...' : 'Finish Market'}
+                {resolveMarketMutation.isPending ? 'Fin du bet en cours...' : 'Finir le bet'}
               </button>
             </div>
           )}
@@ -117,7 +117,7 @@ export const MarketDetailPage = () => {
           {/* Probability Chart */}
           {history && history.length > 0 && (
             <div className="border rounded-lg p-4 bg-card">
-              <h2 className="font-semibold mb-3">Probability History</h2>
+              <h2 className="font-semibold mb-3">Historique des probabilités</h2>
               <OddsChart history={history} outcomes={market.outcomes} />
             </div>
           )}

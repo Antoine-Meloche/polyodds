@@ -7,7 +7,7 @@ import { PointsBadge } from '@/components/shared/PointsBadge';
 
 export const ProfilePage = () => {
   const { id } = useParams<{ id: string }>();
-  const [tab, setTab] = useState<'open' | 'resolved'>('open');
+  const [tab, setTab] = useState<'ouvert' | 'fermé'>('ouvert');
 
   const { data: user, isLoading: userLoading } = useQuery({
     queryKey: ['users', id],
@@ -34,7 +34,7 @@ export const ProfilePage = () => {
         <div className="flex items-start justify-between mb-4">
           <div>
             <h1 className="text-3xl font-bold">{user.username}</h1>
-            <p className="text-sm text-muted-foreground">Joined {new Date(user.created_at).toLocaleDateString()}</p>
+            <p className="text-sm text-muted-foreground">Rejoint le {new Date(user.created_at).toLocaleDateString('fr-CA')}</p>
           </div>
           <PointsBadge points={user.points} />
         </div>
@@ -43,15 +43,15 @@ export const ProfilePage = () => {
         <div className="grid grid-cols-3 gap-4">
           <div className="text-center p-3 bg-secondary rounded-lg">
             <p className="text-2xl font-bold">{user.stats?.markets_created || 0}</p>
-            <p className="text-xs text-muted-foreground">Markets Created</p>
+            <p className="text-xs text-muted-foreground">Bets créés</p>
           </div>
           <div className="text-center p-3 bg-secondary rounded-lg">
             <p className="text-2xl font-bold">{user.stats?.bets_placed || 0}</p>
-            <p className="text-xs text-muted-foreground">Bets Placed</p>
+            <p className="text-xs text-muted-foreground">Bets placés</p>
           </div>
           <div className="text-center p-3 bg-secondary rounded-lg">
             <p className="text-2xl font-bold">{user.stats?.bets_won || 0}</p>
-            <p className="text-xs text-muted-foreground">Bets Won</p>
+            <p className="text-xs text-muted-foreground">Bets gagnés</p>
           </div>
         </div>
       </div>
@@ -60,20 +60,20 @@ export const ProfilePage = () => {
       <div>
         <div className="flex gap-4 border-b mb-4">
           <button
-            onClick={() => setTab('open')}
+            onClick={() => setTab('ouvert')}
             className={`px-4 py-2 font-medium border-b-2 ${
-              tab === 'open' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground'
+              tab === 'ouvert' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground'
             }`}
           >
-            Open Bets
+            Bets ouverts
           </button>
           <button
-            onClick={() => setTab('resolved')}
+            onClick={() => setTab('fermé')}
             className={`px-4 py-2 font-medium border-b-2 ${
-              tab === 'resolved' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground'
+              tab === 'fermé' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground'
             }`}
           >
-            Resolved Bets
+            Bets résolus
           </button>
         </div>
 
@@ -82,13 +82,13 @@ export const ProfilePage = () => {
           {betsData && betsData.bets.length > 0 ? (
             betsData.bets.map((bet) => (
               <div key={bet.id} className="border rounded-lg p-4 bg-card">
-                <p className="font-medium">Market: {bet.market_id}</p>
-                <p className="text-sm text-muted-foreground">Amount: {bet.amount} points</p>
-                <p className="text-xs text-muted-foreground">Placed on {new Date(bet.created_at).toLocaleDateString()}</p>
+                <p className="font-medium">Bet: {bet.market_id}</p>
+                <p className="text-sm text-muted-foreground">Montant: {bet.amount} points</p>
+                <p className="text-xs text-muted-foreground">Placé le {new Date(bet.created_at).toLocaleDateString('fr-CA')}</p>
               </div>
             ))
           ) : (
-            <p className="text-center text-muted-foreground py-6">No {tab} bets</p>
+            <p className="text-center text-muted-foreground py-6">Aucun bet {tab}</p>
           )}
         </div>
       </div>

@@ -22,7 +22,7 @@ export const RegisterPage = () => {
       setAuth(response.token, response.user);
       navigate('/');
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Registration failed');
+      setError(err.response?.data?.error || 'Échec de l’inscription');
     } finally {
       setIsLoading(false);
     }
@@ -34,14 +34,14 @@ export const RegisterPage = () => {
         <div className="border rounded-lg p-8 bg-card">
           <h1 className="mb-8 flex items-center justify-center gap-2 text-2xl font-bold text-center">
             <BrandIcon className="text-primary" />
-            <span>Create Account</span>
+            <span>Créer un compte</span>
           </h1>
 
           {error && <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-lg text-sm">{error}</div>}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Username</label>
+              <label className="block text-sm font-medium mb-1">Nom d'utilisateur</label>
               <input
                 type="text"
                 value={username}
@@ -52,7 +52,7 @@ export const RegisterPage = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">Password</label>
+              <label className="block text-sm font-medium mb-1">Mot de passe</label>
               <input
                 type="password"
                 value={password}
@@ -67,14 +67,14 @@ export const RegisterPage = () => {
               disabled={isLoading}
               className="w-full px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 disabled:opacity-50 font-medium"
             >
-              {isLoading ? 'Creating account...' : 'Register'}
+              {isLoading ? 'Création du compte en cours...' : "S'inscrire"}
             </button>
           </form>
 
           <p className="mt-6 text-center text-sm text-muted-foreground">
-            Already have an account?{' '}
+            Vous avez déjà un compte?{' '}
             <Link to="/login" className="text-primary hover:underline">
-              Login
+              Se connecter
             </Link>
           </p>
         </div>

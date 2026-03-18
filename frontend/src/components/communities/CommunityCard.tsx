@@ -14,7 +14,7 @@ export const CommunityCard = ({ community }: { community: CommunityCardData }) =
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="font-semibold line-clamp-1">{community.name}</h3>
-            {community.is_private && <span className="text-xs bg-secondary px-2 py-1 rounded">Private</span>}
+            {community.is_private && <span className="text-xs bg-secondary px-2 py-1 rounded">Privée</span>}
           </div>
 
           <p className="text-sm text-muted-foreground line-clamp-2">{community.description}</p>

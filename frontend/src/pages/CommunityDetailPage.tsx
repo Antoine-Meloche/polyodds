@@ -49,16 +49,16 @@ export const CommunityDetailPage = () => {
           <div className="flex gap-4 mt-4 text-sm text-muted-foreground">
             <span className="inline-flex items-center gap-1.5">
               <MembersIcon className="size-4" />
-              <span>{community.member_count} members</span>
+              <span>{community.member_count} membres</span>
             </span>
             <span className="inline-flex items-center gap-1.5">
               <MarketsIcon className="size-4" />
-              <span>{community.market_count} markets</span>
+              <span>{community.market_count} bets</span>
             </span>
             {community.is_private && (
               <span className="inline-flex items-center gap-1.5">
                 <PrivateIcon className="size-4" />
-                <span>Private</span>
+                <span>Privé</span>
               </span>
             )}
           </div>
@@ -70,7 +70,7 @@ export const CommunityDetailPage = () => {
               disabled={joinMutation.isPending}
               className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 disabled:opacity-50"
             >
-              {joinMutation.isPending ? 'Joining...' : 'Join'}
+              {joinMutation.isPending ? 'Adhésion en cours...' : 'Rejoindre'}
             </button>
           )}
           {isMember && (
@@ -79,22 +79,22 @@ export const CommunityDetailPage = () => {
               disabled={leaveMutation.isPending}
               className="px-4 py-2 border rounded-lg hover:bg-secondary disabled:opacity-50"
             >
-              {leaveMutation.isPending ? 'Leaving...' : 'Leave'}
+              {leaveMutation.isPending ? 'Départ en cours...' : 'Quitter'}
             </button>
           )}
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Markets */}
+        {/* Bets */}
         <div className="lg:col-span-2">
-          <h2 className="text-xl font-semibold mb-4">Markets</h2>
+          <h2 className="text-xl font-semibold mb-4">Bets</h2>
           <MarketList markets={marketsData?.markets || []} isLoading={false} />
         </div>
 
         {/* Members */}
         <div>
-          <h2 className="text-xl font-semibold mb-4">Members</h2>
+          <h2 className="text-xl font-semibold mb-4">Membres</h2>
           {membersData && <MemberList members={membersData.members} />}
         </div>
       </div>

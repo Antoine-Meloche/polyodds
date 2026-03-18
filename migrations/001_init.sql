@@ -46,13 +46,12 @@ CREATE TABLE IF NOT EXISTS markets (
   community_id UUID REFERENCES communities(id) ON DELETE CASCADE,
   creator_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   outcomes TEXT[] NOT NULL,
-  status VARCHAR(50) NOT NULL DEFAULT 'open',
+  status VARCHAR(50) NOT NULL DEFAULT 'ouvert',
   pools BIGINT[] NOT NULL,
   winning_outcome_index INT,
-  close_at TIMESTAMPTZ NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  CHECK (status IN ('open', 'closed', 'resolved')),
+  CHECK (status IN ('ouvert', 'fermé')),
   CHECK (array_length(outcomes, 1) = array_length(pools, 1)),
   CHECK (array_length(outcomes, 1) >= 2)
 );
@@ -80,3 +79,10 @@ CREATE TABLE IF NOT EXISTS probability_snapshots (
   recorded_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_probability_snapshots_market ON probability_snapshots(market_id);
+
+INSERT INTO categories (name, slug)
+VALUES
+  ('Poly', 'poly'),
+  ('General', 'general'),
+  ('PolyOrbite', 'polyorbite')
+ON CONFLICT (slug) DO NOTHING;

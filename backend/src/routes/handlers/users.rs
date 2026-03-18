@@ -46,7 +46,7 @@ pub async fn get_user(
                  FROM bets b
                  JOIN markets m ON m.id = b.market_id
                  WHERE b.user_id = $1
-                   AND m.status = 'resolved'
+                   AND m.status = 'fermé'
                    AND m.winning_outcome_index = b.outcome_index
              ) AS bets_won",
     )
@@ -70,7 +70,7 @@ pub async fn get_user_bets(
          FROM bets b
          JOIN markets m ON m.id = b.market_id
          WHERE b.user_id = $1
-           AND ($2::text IS NULL OR ($2 = 'open' AND m.status = 'open') OR ($2 = 'resolved' AND m.status = 'resolved'))
+           AND ($2::text IS NULL OR ($2 = 'ouvert' AND m.status = 'ouvert') OR ($2 = 'fermé' AND m.status = 'fermé'))
          ORDER BY b.created_at DESC
          LIMIT $3 OFFSET $4",
     )
@@ -86,7 +86,7 @@ pub async fn get_user_bets(
          FROM bets b
          JOIN markets m ON m.id = b.market_id
          WHERE b.user_id = $1
-           AND ($2::text IS NULL OR ($2 = 'open' AND m.status = 'open') OR ($2 = 'resolved' AND m.status = 'resolved'))",
+           AND ($2::text IS NULL OR ($2 = 'ouvert' AND m.status = 'ouvert') OR ($2 = 'fermé' AND m.status = 'fermé'))",
     )
     .bind(id)
     .bind(query.status)

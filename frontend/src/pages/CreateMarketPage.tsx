@@ -36,14 +36,14 @@ export const CreateMarketPage = () => {
         outcomes,
       }),
     onSuccess: (market) => {
-      navigate(`/markets/${market.id}`);
+      navigate(`/bets/${market.id}`);
     },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || !categoryId || outcomes.length < 2) {
-      alert('Please fill all required fields');
+      alert('Veuillez remplir tous les champs obligatoires');
       return;
     }
     createMutation.mutate();
@@ -66,25 +66,25 @@ export const CreateMarketPage = () => {
   };
 
   if (!isAuthenticated) {
-    return <div className="text-center py-12 text-muted-foreground">Please login to create a market</div>;
+    return <div className="text-center py-12 text-muted-foreground">Veuillez vous connecter pour créer un bet</div>;
   }
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Create Market</h1>
-        <p className="text-muted-foreground">Create a new prediction market</p>
+        <h1 className="text-3xl font-bold">Créer un bet</h1>
+        <p className="text-muted-foreground">Créez un nouveau bet de prédiction académique</p>
       </div>
 
       <form onSubmit={handleSubmit} className="border rounded-lg p-6 bg-card space-y-6">
         {/* Title */}
         <div>
-          <label className="block text-sm font-medium mb-2">Title *</label>
+          <label className="block text-sm font-medium mb-2">Titre *</label>
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="e.g., Will Bitcoin reach $100k by end of year?"
+            placeholder="Ex.: Quel sera la moyenne du promo 2025 en fin de session?"
             className="w-full px-3 py-2 border rounded-lg"
             required
           />
@@ -96,21 +96,21 @@ export const CreateMarketPage = () => {
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Provide details about this market..."
+            placeholder="Fournissez des détails sur ce bet..."
             className="w-full px-3 py-2 border rounded-lg h-24"
           />
         </div>
 
         {/* Category */}
         <div>
-          <label className="block text-sm font-medium mb-2">Category *</label>
+          <label className="block text-sm font-medium mb-2">Catégorie *</label>
           <select
             value={categoryId}
             onChange={(e) => setCategoryId(e.target.value)}
             className="w-full px-3 py-2 border rounded-lg"
             required
           >
-            <option value="">Select a category</option>
+            <option value="">Sélectionnez une catégorie</option>
             {categories?.categories.map((cat) => (
               <option key={cat.id} value={cat.id}>
                 {cat.name}
@@ -121,13 +121,13 @@ export const CreateMarketPage = () => {
 
         {/* Community */}
         <div>
-          <label className="block text-sm font-medium mb-2">Community (Optional)</label>
+          <label className="block text-sm font-medium mb-2">Communauté (optionnel)</label>
           <select
             value={communityId}
             onChange={(e) => setCommunityId(e.target.value)}
             className="w-full px-3 py-2 border rounded-lg"
           >
-            <option value="">No community</option>
+            <option value="">Pas de communauté</option>
             {communities?.communities.map((com) => (
               <option key={com.id} value={com.id}>
                 {com.name}
@@ -139,13 +139,13 @@ export const CreateMarketPage = () => {
         {/* Outcomes */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label className="text-sm font-medium">Outcomes *</label>
+            <label className="text-sm font-medium">Résultats *</label>
             <button
               type="button"
               onClick={addOutcome}
               className="text-xs text-primary hover:underline"
             >
-              + Add Outcome
+              + Ajouter un résultat
             </button>
           </div>
           <div className="space-y-2">
@@ -155,7 +155,7 @@ export const CreateMarketPage = () => {
                   type="text"
                   value={outcome}
                   onChange={(e) => updateOutcome(index, e.target.value)}
-                  placeholder={`Outcome ${index + 1}`}
+                  placeholder={`Résultat ${index + 1}`}
                   className="flex-1 px-3 py-2 border rounded-lg"
                   required
                 />
@@ -165,7 +165,7 @@ export const CreateMarketPage = () => {
                     onClick={() => removeOutcome(index)}
                     className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg text-sm"
                   >
-                    Remove
+                    Supprimer
                   </button>
                 )}
               </div>
@@ -179,7 +179,7 @@ export const CreateMarketPage = () => {
           disabled={createMutation.isPending}
           className="w-full px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 disabled:opacity-50 font-medium"
         >
-          {createMutation.isPending ? 'Creating...' : 'Create Market'}
+          {createMutation.isPending ? 'Création en cours...' : 'Create Bet'}
         </button>
 
         {createMutation.error && (

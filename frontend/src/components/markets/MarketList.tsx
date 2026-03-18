@@ -15,7 +15,7 @@ export const MarketList = ({
   if (isLoading) return <LoadingSpinner />;
 
   if (!markets || markets.length === 0) {
-    return <EmptyState title="No markets found" description="Try adjusting your filters" />;
+    return <EmptyState title="Aucun bet trouvé" description="Essayez d'ajuster vos filtres" />;
   }
 
   return (

@@ -22,7 +22,7 @@ interface FetchCommunityMembersParams {
 }
 
 interface FetchCommunityMarketsParams {
-  status?: 'open' | 'closed' | 'resolved';
+  status?: 'ouvert' | 'fermé';
   limit?: number;
   offset?: number;
 }

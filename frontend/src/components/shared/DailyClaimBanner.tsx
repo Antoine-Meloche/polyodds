@@ -17,8 +17,8 @@ export const DailyClaimBanner = () => {
       <div className="flex items-center gap-3">
         <GiftIcon className="animate-bounce text-amber-700" />
         <div>
-          <p className="font-semibold text-amber-900">Daily Bonus Available!</p>
-          <p className="text-sm text-amber-800">Claim 100 points now</p>
+          <p className="font-semibold text-amber-900">Bonus quotidien disponible!</p>
+          <p className="text-sm text-amber-800">Réclamez 100 points maintenant</p>
         </div>
       </div>
       <button
@@ -26,7 +26,7 @@ export const DailyClaimBanner = () => {
         disabled={isPending}
         className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 disabled:opacity-50"
       >
-        {isPending ? 'Claiming...' : 'Claim'}
+        {isPending ? 'Réclamation en cours...' : 'Réclamer'}
       </button>
     </div>
   );

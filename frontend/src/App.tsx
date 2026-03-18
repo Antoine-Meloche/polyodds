@@ -35,15 +35,15 @@ const router = createBrowserRouter([
         element: <HomePage />,
       },
       {
-        path: 'markets',
+        path: 'bets',
         element: <MarketsPage />,
       },
       {
-        path: 'markets/:id',
+        path: 'bets/:id',
         element: <MarketDetailPage />,
       },
       {
-        path: 'markets/create',
+        path: 'bets/create',
         element: (
           <AuthGuard>
             <CreateMarketPage />

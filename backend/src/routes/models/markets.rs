@@ -14,7 +14,7 @@ pub struct Market {
     pub community_id: Option<Uuid>,
     pub creator_id: Uuid,
     pub outcomes: Vec<String>,
-    #[ts(type = "\"open\" | \"closed\" | \"resolved\"")]
+    #[ts(type = "\"open\" | \"resolved\"")]
     pub status: String,
     pub winning_outcome_index: Option<i32>,
     pub created_at: DateTime<Utc>,

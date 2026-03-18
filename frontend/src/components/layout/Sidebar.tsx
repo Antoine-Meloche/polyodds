@@ -25,32 +25,32 @@ export const Sidebar = () => {
             className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${isActive('/') ? 'bg-secondary font-semibold' : 'hover:bg-secondary'}`}
           >
             <HomeIcon className="size-4 shrink-0" />
-            <span>Home</span>
+            <span>Accueil</span>
           </Link>
           <Link
-            to="/markets"
-            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${isActive('/markets') && location.pathname !== '/markets/create' ? 'bg-secondary font-semibold' : 'hover:bg-secondary'}`}
+            to="/bets"
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${isActive('/bets') && location.pathname !== '/bets/create' ? 'bg-secondary font-semibold' : 'hover:bg-secondary'}`}
           >
             <MarketsIcon className="size-4 shrink-0" />
-            <span>All Markets</span>
+            <span>Tous les bets</span>
           </Link>
           <Link
             to="/leaderboard"
             className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${isActive('/leaderboard') ? 'bg-secondary font-semibold' : 'hover:bg-secondary'}`}
           >
             <LeaderboardIcon className="size-4 shrink-0" />
-            <span>Leaderboard</span>
+            <span>Classement</span>
           </Link>
         </nav>
 
         {/* Categories */}
         <div>
-          <h3 className="text-xs font-semibold text-muted-foreground uppercase px-3 mb-2">Categories</h3>
+          <h3 className="text-xs font-semibold text-muted-foreground uppercase px-3 mb-2">Catégories</h3>
           <div className="space-y-1">
             {categoriesData?.categories.slice(0, 8).map((cat) => (
               <Link
                 key={cat.id}
-                to={`/markets?category_id=${cat.id}`}
+                to={`/bets?category_id=${cat.id}`}
                 className="block px-3 py-1 text-sm rounded hover:bg-secondary text-muted-foreground hover:text-foreground"
               >
                 {cat.name}
@@ -62,9 +62,9 @@ export const Sidebar = () => {
         {/* Communities */}
         <div>
           <div className="flex items-center justify-between px-3 mb-2">
-            <h3 className="text-xs font-semibold text-muted-foreground uppercase">Communities</h3>
+            <h3 className="text-xs font-semibold text-muted-foreground uppercase">Communautés</h3>
             <Link to="/communities" className="text-xs text-primary hover:underline">
-              Browse
+              Parcourir
             </Link>
           </div>
           <div className="space-y-1">
@@ -83,16 +83,16 @@ export const Sidebar = () => {
         {/* Create Actions */}
         <div className="border-t pt-4 space-y-2">
           <Link
-            to="/markets/create"
+            to="/bets/create"
             className="block px-3 py-2 rounded-lg text-sm bg-primary text-primary-foreground hover:opacity-90 text-center font-medium"
           >
-            + Create Market
+            + Créer un bet
           </Link>
           <Link
             to="/communities/create"
             className="block px-3 py-2 rounded-lg text-sm border hover:bg-secondary text-center font-medium"
           >
-            + Create Community
+            + Créer une communauté
           </Link>
         </div>
       </div>

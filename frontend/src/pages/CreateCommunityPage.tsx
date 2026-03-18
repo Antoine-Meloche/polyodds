@@ -27,32 +27,32 @@ export const CreateCommunityPage = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name) {
-      alert('Please enter a community name');
+      alert('Veuillez entrer un nom de communauté');
       return;
     }
     createMutation.mutate();
   };
 
   if (!isAuthenticated) {
-    return <div className="text-center py-12 text-muted-foreground">Please login to create a community</div>;
+    return <div className="text-center py-12 text-muted-foreground">Veuillez vous connecter pour créer une communauté</div>;
   }
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Create Community</h1>
-        <p className="text-muted-foreground">Build your prediction community</p>
+        <h1 className="text-3xl font-bold">Créer une communauté</h1>
+        <p className="text-muted-foreground">Faites des bets sur des insides</p>
       </div>
 
       <form onSubmit={handleSubmit} className="border rounded-lg p-6 bg-card space-y-6">
         {/* Name */}
         <div>
-          <label className="block text-sm font-medium mb-2">Community Name *</label>
+          <label className="block text-sm font-medium mb-2">Nom de la communauté *</label>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="e.g., Crypto Enthusiasts"
+            placeholder="Ex.: Société technique PolyOrbite"
             className="w-full px-3 py-2 border rounded-lg"
             required
           />
@@ -64,7 +64,7 @@ export const CreateCommunityPage = () => {
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="What is this community about?"
+            placeholder="C'est quoi les bets de cette communauté?"
             className="w-full px-3 py-2 border rounded-lg h-24"
           />
         </div>
@@ -79,7 +79,7 @@ export const CreateCommunityPage = () => {
             className="rounded"
           />
           <label htmlFor="private" className="text-sm font-medium">
-            Private community (only invited members can join)
+            Communauté privée (seuls les membres invités peuvent rejoindre)
           </label>
         </div>
 
@@ -89,7 +89,7 @@ export const CreateCommunityPage = () => {
           disabled={createMutation.isPending}
           className="w-full px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 disabled:opacity-50 font-medium"
         >
-          {createMutation.isPending ? 'Creating...' : 'Create Community'}
+          {createMutation.isPending ? 'Création en cours...' : 'Créer la communauté'}
         </button>
 
         {createMutation.error && (

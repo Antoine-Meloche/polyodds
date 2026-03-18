@@ -219,7 +219,7 @@ pub async fn create_market(
 
     let market = sqlx::query_as::<_, Market>(
         "INSERT INTO markets (title, description, category_id, community_id, creator_id, outcomes, status, pools)
-         VALUES ($1, $2, $3, $4, $5, $6, 'open', $7)
+         VALUES ($1, $2, $3, $4, $5, $6, 'ouvert', $7)
          RETURNING id, title, description, category_id, community_id, creator_id, outcomes, status,
                    winning_outcome_index, created_at",
     )
@@ -320,7 +320,7 @@ pub async fn resolve_market(
 
     sqlx::query(
         "UPDATE markets
-         SET status = 'resolved', winning_outcome_index = $2, updated_at = NOW()
+         SET status = 'fermé', winning_outcome_index = $2, updated_at = NOW()
          WHERE id = $1",
     )
     .bind(id)

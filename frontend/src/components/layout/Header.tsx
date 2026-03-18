@@ -17,7 +17,7 @@ export const Header = () => {
         <div className="flex-1 px-8">
           <input
             type="text"
-            placeholder="Search markets..."
+            placeholder="Rechercher des bets..."
             className="w-full max-w-md px-3 py-2 border rounded-lg text-sm bg-secondary"
           />
         </div>
@@ -33,17 +33,17 @@ export const Header = () => {
                 onClick={logout}
                 className="px-3 py-1 text-sm border rounded-lg hover:bg-secondary"
               >
-                Logout
+                Se déconnecter
               </button>
             </>
           )}
           {!isAuthenticated && (
             <>
               <Link to="/login" className="text-sm hover:underline">
-                Login
+                Se connecter
               </Link>
               <Link to="/register" className="px-3 py-1 text-sm bg-primary text-primary-foreground rounded-lg hover:opacity-90">
-                Register
+                S'inscrire
               </Link>
             </>
           )}
