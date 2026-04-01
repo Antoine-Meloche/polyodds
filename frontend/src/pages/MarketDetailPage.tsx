@@ -8,7 +8,7 @@ import { BetPanel } from '@/components/markets/BetPanel';
 import { OddsChart } from '@/components/markets/OddsChart';
 import { OutcomeBadge } from '@/components/markets/OutcomeBadge';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
-import { getWsUrl } from '@/utils/ws';
+import { connectWebSocket } from '@/utils/ws';
 import { getAxiosErrorMessage } from '@/utils/errors';
 import { getMarketStatusLabelFr } from '@/utils/marketStatus';
 
@@ -23,17 +23,11 @@ export const MarketDetailPage = () => {
   useEffect(() => {
     if (!id) return;
 
-    const ws = new WebSocket(getWsUrl(`/api/markets/${id}/ws`));
-
-    ws.onmessage = () => {
+    return connectWebSocket(`/api/markets/${id}/ws`, () => {
       queryClient.invalidateQueries({ queryKey: ['markets', id] });
       queryClient.invalidateQueries({ queryKey: ['markets', id, 'history'] });
       queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
-    };
-
-    return () => {
-      ws.close();
-    };
+    });
   }, [id, queryClient]);
 
   const resolveMarketMutation = useMutation({
