@@ -144,9 +144,9 @@ struct MarketRow {
     id: Uuid,
     title: String,
     description: String,
-    category_id: Uuid,
+    category_id: Option<Uuid>,
     category_ids: Vec<Uuid>,
-    creator_id: Uuid,
+    creator_id: Option<Uuid>,
     outcomes: Vec<String>,
     status: String,
     winning_outcome_index: Option<i32>,
@@ -263,16 +263,12 @@ pub async fn create_market(
     auth: AuthUser,
     Json(payload): Json<CreateMarketRequest>,
 ) -> AppResult<Json<Market>> {
-    if payload.category_ids.is_empty() {
-        return Err(AppError::Validation("Market needs at least one category".to_string()));
-    }
-
     if payload.outcomes.len() < 2 {
         return Err(AppError::Validation("Market needs at least two outcomes".to_string()));
     }
 
     let pools = vec![INITIAL_POOL_POINTS_PER_OUTCOME; payload.outcomes.len()];
-    let primary_category_id = payload.category_ids[0];
+    let primary_category_id = payload.category_ids.first().copied();
 
     let market = sqlx::query_as::<_, Market>(
         "INSERT INTO markets (title, description, category_id, category_ids, creator_id, outcomes, status, pools)
@@ -311,7 +307,7 @@ pub async fn update_market(
     .await?
     .ok_or(AppError::NotFound)?;
 
-    if market.creator_id != auth.user_id {
+    if market.creator_id != Some(auth.user_id) {
         return Err(AppError::Forbidden);
     }
     if market.status != STATUS_OPEN {
@@ -357,7 +353,7 @@ pub async fn resolve_market(
     .await?
     .ok_or(AppError::NotFound)?;
 
-    if row.creator_id != auth.user_id {
+    if row.creator_id != Some(auth.user_id) {
         return Err(AppError::Forbidden);
     }
     if row.status == STATUS_RESOLVED {
@@ -482,7 +478,7 @@ pub async fn place_bet(
     .await?
     .ok_or(AppError::NotFound)?;
 
-    if row.creator_id == auth.user_id {
+    if row.creator_id == Some(auth.user_id) {
         return Err(AppError::BadRequest(
             "Market creators cannot bet on their own market".to_string(),
         ));

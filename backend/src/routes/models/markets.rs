@@ -10,9 +10,9 @@ pub struct Market {
     pub id: Uuid,
     pub title: String,
     pub description: String,
-    pub category_id: Uuid,
+    pub category_id: Option<Uuid>,
     pub category_ids: Vec<Uuid>,
-    pub creator_id: Uuid,
+    pub creator_id: Option<Uuid>,
     pub outcomes: Vec<String>,
     #[ts(type = "\"open\" | \"resolved\"")]
     pub status: String,

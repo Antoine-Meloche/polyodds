@@ -72,7 +72,7 @@ export const CreateMarketPage = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title || selectedCategoryIds.length === 0 || outcomes.length < 2) {
+    if (!title || outcomes.length < 2) {
       alert('Veuillez remplir tous les champs obligatoires');
       return;
     }
@@ -153,7 +153,7 @@ export const CreateMarketPage = () => {
 
         {/* Categories */}
         <div className="space-y-3">
-          <label className="block text-sm font-medium">Catégories *</label>
+          <label className="block text-sm font-medium">Catégories</label>
 
           <CategorySelector
             categories={categories?.categories ?? []}
@@ -166,7 +166,7 @@ export const CreateMarketPage = () => {
             emptyMessage="Aucune categorie trouvee."
           />
 
-          <p className="text-xs text-muted-foreground">Sélectionnez une ou plusieurs catégories.</p>
+          <p className="text-xs text-muted-foreground">Sélectionnez une ou plusieurs catégories, ou laissez vide.</p>
 
           <div className="flex gap-2">
             <input
