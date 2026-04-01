@@ -61,20 +61,20 @@ export const ProfilePage = () => {
         <div className="grid grid-cols-3 gap-4">
           <div className="text-center p-3 bg-secondary rounded-lg border border-primary/20">
             <p className="text-2xl font-bold">{user.stats?.markets_created || 0}</p>
-            <p className="text-xs text-muted-foreground">Bets créés</p>
+            <p className="text-xs text-muted-foreground">Marchés créés</p>
           </div>
           <div className="text-center p-3 bg-secondary rounded-lg border border-primary/20">
             <p className="text-2xl font-bold">{user.stats?.bets_placed || 0}</p>
-            <p className="text-xs text-muted-foreground">Bets placés</p>
+            <p className="text-xs text-muted-foreground">Mises placées</p>
           </div>
           <div className="text-center p-3 bg-secondary rounded-lg border border-primary/20">
             <p className="text-2xl font-bold">{user.stats?.bets_won || 0}</p>
-            <p className="text-xs text-muted-foreground">Bets gagnés</p>
+            <p className="text-xs text-muted-foreground">Mises gagnées</p>
           </div>
         </div>
       </div>
 
-      {/* Bets Tabs */}
+      {/* Mises Tabs */}
       <div>
         <div className="flex gap-4 border-b border-primary/20 mb-4">
           <button
@@ -83,7 +83,7 @@ export const ProfilePage = () => {
               tab === 'open' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground'
             }`}
           >
-            Bets ouverts
+            Mises ouvertes
           </button>
           <button
             onClick={() => setTab('resolved')}
@@ -91,22 +91,22 @@ export const ProfilePage = () => {
               tab === 'resolved' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground'
             }`}
           >
-            Bets résolus
+            Mises résolues
           </button>
         </div>
 
-        {/* Bets List */}
+        {/* Mises List */}
         <div className="space-y-3">
           {betsData && betsData.bets.length > 0 ? (
             betsData.bets.map((bet) => (
               <div key={bet.id} className="app-panel p-4">
-                <p className="font-medium">Bet: {marketTitleById.get(bet.market_id) || 'Marché'}</p>
+                <p className="font-medium">Marché: {marketTitleById.get(bet.market_id) || 'Marché'}</p>
                 <p className="text-sm text-muted-foreground">Montant: {bet.amount} points</p>
                 <p className="text-xs text-muted-foreground">Placé le {new Date(bet.created_at).toLocaleDateString('fr-CA')}</p>
               </div>
             ))
           ) : (
-            <p className="text-center text-muted-foreground py-6">Aucun bet {tab === 'open' ? 'ouvert' : 'résolu'}</p>
+            <p className="text-center text-muted-foreground py-6">Aucune mise {tab === 'open' ? 'ouverte' : 'résolue'}</p>
           )}
         </div>
       </div>

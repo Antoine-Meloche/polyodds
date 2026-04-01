@@ -15,7 +15,7 @@ export const BetPanel = ({ market }: { market: MarketWithPools }) => {
   if (market.status !== 'open') {
     return (
       <div className="app-panel p-4">
-        <p className="text-center text-muted-foreground">Ce bet est {market.status}</p>
+        <p className="text-center text-muted-foreground">Ce marché est {market.status}</p>
       </div>
     );
   }
@@ -24,7 +24,7 @@ export const BetPanel = ({ market }: { market: MarketWithPools }) => {
     return (
       <div className="app-panel p-4">
         <p className="text-center text-muted-foreground">
-          En tant que créateur du bet, vous ne pouvez pas parier sur votre propre bet.
+          En tant que créateur du marché, vous ne pouvez pas placer une mise sur votre propre marché.
         </p>
       </div>
     );
@@ -59,7 +59,7 @@ export const BetPanel = ({ market }: { market: MarketWithPools }) => {
 
   return (
     <div className="app-panel p-4 space-y-4">
-      <h3 className="font-semibold">Placer un bet</h3>
+      <h3 className="font-semibold">Placer une mise</h3>
 
       <div className="grid grid-cols-2 gap-2">
         <button
@@ -147,7 +147,7 @@ export const BetPanel = ({ market }: { market: MarketWithPools }) => {
       </div>
 
       {side === 'buy' && exceedsBalance && (
-        <div className="text-destructive text-sm">Vous n'avez pas assez de points pour ce bet.</div>
+        <div className="text-destructive text-sm">Vous n'avez pas assez de points pour cette mise.</div>
       )}
 
       {side === 'sell' && exceedsShares && (

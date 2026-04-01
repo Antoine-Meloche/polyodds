@@ -26,12 +26,13 @@ export const MarketsPage = () => {
       <div className="app-panel p-5">
         <div className="flex flex-col gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-primary">Tous les bets</h1>
+            <h1 className="text-3xl font-bold text-primary">Tous les marchés</h1>
             <p className="text-sm text-muted-foreground mt-1">Recherchez et filtrez tous les marchés depuis cette page.</p>
           </div>
+
           <input
             type="text"
-            placeholder="Rechercher un bet..."
+            placeholder="Rechercher un marché..."
             value={filters.search || ''}
             onChange={(e) =>
               handleFilterChange({

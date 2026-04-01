@@ -69,9 +69,9 @@ export const MarketDetailPage = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          {/* Bet Info */}
+          {/* Market Info */}
           <div className="app-panel p-4">
-            <h2 className="font-semibold mb-3">Informations du Bet</h2>
+            <h2 className="font-semibold mb-3">Informations du marché</h2>
             <div className="space-y-2 text-sm">
               <p>Statut: <span className="font-medium">{market.status}</span></p>
               <p>Volume total: <span className="font-medium">{market.total_volume}</span></p>
@@ -98,7 +98,7 @@ export const MarketDetailPage = () => {
             <div className="app-panel p-4 space-y-3">
               <h2 className="font-semibold">Options d'administration</h2>
               <p className="text-sm text-muted-foreground">
-                En tant que créateur, vous pouvez terminer ce bet et sélectionner l'option gagnante.
+                En tant que créateur, vous pouvez clôturer ce marché et sélectionner l'option gagnante.
               </p>
 
               <div className="space-y-2">
@@ -126,7 +126,7 @@ export const MarketDetailPage = () => {
                 disabled={!canResolveNow || market.status === 'resolved' || resolveMarketMutation.isPending}
                 className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 disabled:opacity-50 font-medium"
               >
-                {resolveMarketMutation.isPending ? 'Fin du bet en cours...' : 'Finir le bet'}
+                {resolveMarketMutation.isPending ? 'Clôture du marché en cours...' : 'Clôturer le marché'}
               </button>
             </div>
           )}
@@ -138,7 +138,7 @@ export const MarketDetailPage = () => {
           </div>
         </div>
 
-        {/* Bet Panel */}
+        {/* Mise Panel */}
         <div>
           <BetPanel market={market} />
         </div>

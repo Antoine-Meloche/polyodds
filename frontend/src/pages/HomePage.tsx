@@ -21,7 +21,7 @@ export const HomePage = () => {
             <p className="text-muted-foreground">C'est quoi les odds</p>
           </div>
           <Link to="/bets" className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 shadow-[0_10px_20px_rgba(87,104,175,0.25)]">
-            Voir tous les bets
+            Voir tous les marchés
           </Link>
         </div>
         <MarketList markets={data?.markets || []} isLoading={isLoading} />

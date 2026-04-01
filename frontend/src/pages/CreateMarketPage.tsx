@@ -58,14 +58,14 @@ export const CreateMarketPage = () => {
   };
 
   if (!isAuthenticated) {
-    return <div className="text-center py-12 text-muted-foreground">Veuillez vous connecter pour créer un bet</div>;
+    return <div className="text-center py-12 text-muted-foreground">Veuillez vous connecter pour créer un marché</div>;
   }
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Créer un bet</h1>
-        <p className="text-muted-foreground">Créez un nouveau bet de prédiction académique</p>
+        <h1 className="text-3xl font-bold">Créer un marché</h1>
+        <p className="text-muted-foreground">Créez un nouveau marché de prédiction académique</p>
       </div>
 
       <form onSubmit={handleSubmit} className="app-panel p-6 space-y-6">
@@ -88,7 +88,7 @@ export const CreateMarketPage = () => {
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Fournissez des détails sur ce bet..."
+            placeholder="Fournissez des détails sur ce marché..."
             className="w-full px-3 py-2 border rounded-lg h-24"
           />
         </div>
@@ -154,7 +154,7 @@ export const CreateMarketPage = () => {
           disabled={createMutation.isPending}
           className="w-full px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 disabled:opacity-50 font-medium"
         >
-          {createMutation.isPending ? 'Création en cours...' : 'Create Bet'}
+          {createMutation.isPending ? 'Création en cours...' : 'Créer le marché'}
         </button>
 
         {createMutation.error && (
