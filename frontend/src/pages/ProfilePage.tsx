@@ -7,7 +7,7 @@ import { PointsBadge } from '@/components/shared/PointsBadge';
 
 export const ProfilePage = () => {
   const { id } = useParams<{ id: string }>();
-  const [tab, setTab] = useState<'ouvert' | 'fermé'>('ouvert');
+  const [tab, setTab] = useState<'open' | 'resolved'>('open');
 
   const { data: user, isLoading: userLoading } = useQuery({
     queryKey: ['users', id],
@@ -60,17 +60,17 @@ export const ProfilePage = () => {
       <div>
         <div className="flex gap-4 border-b border-primary/20 mb-4">
           <button
-            onClick={() => setTab('ouvert')}
+            onClick={() => setTab('open')}
             className={`px-4 py-2 font-medium border-b-2 ${
-              tab === 'ouvert' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground'
+              tab === 'open' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground'
             }`}
           >
             Bets ouverts
           </button>
           <button
-            onClick={() => setTab('fermé')}
+            onClick={() => setTab('resolved')}
             className={`px-4 py-2 font-medium border-b-2 ${
-              tab === 'fermé' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground'
+              tab === 'resolved' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground'
             }`}
           >
             Bets résolus
@@ -88,7 +88,7 @@ export const ProfilePage = () => {
               </div>
             ))
           ) : (
-            <p className="text-center text-muted-foreground py-6">Aucun bet {tab}</p>
+            <p className="text-center text-muted-foreground py-6">Aucun bet {tab === 'open' ? 'ouvert' : 'résolu'}</p>
           )}
         </div>
       </div>

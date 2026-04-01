@@ -2,7 +2,7 @@ import client from './client';
 import type { BetsResponse, LeaderboardResponse, UserWithStats } from '@/types';
 
 interface FetchUserBetsParams {
-  status?: 'ouvert' | 'fermé';
+  status?: 'open' | 'resolved';
   limit?: number;
   offset?: number;
 }

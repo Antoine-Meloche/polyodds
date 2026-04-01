@@ -7,7 +7,7 @@ export const HomePage = () => {
   const { data, isLoading } = useMarkets({
     limit: 12,
     sort: 'volume',
-    status: 'ouvert',
+    status: 'open',
   });
 
   return (

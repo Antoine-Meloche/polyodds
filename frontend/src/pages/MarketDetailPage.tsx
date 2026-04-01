@@ -29,7 +29,7 @@ export const MarketDetailPage = () => {
   if (isLoading || !market) return <LoadingSpinner />;
 
   const isCreator = !!user && user.id === market.creator_id;
-  const canResolveNow = market.status !== 'fermé';
+  const canResolveNow = market.status !== 'resolved';
 
   const resolveErrorMessage =
     resolveMarketMutation.error instanceof AxiosError
@@ -90,7 +90,7 @@ export const MarketDetailPage = () => {
                   value={winningOutcomeIndex}
                   onChange={(e) => setWinningOutcomeIndex(Number(e.target.value))}
                   className="w-full px-3 py-2 border rounded-lg bg-background"
-                  disabled={market.status === 'fermé' || resolveMarketMutation.isPending}
+                  disabled={market.status === 'resolved' || resolveMarketMutation.isPending}
                 >
                   {market.outcomes.map((outcome, index) => (
                     <option key={outcome + index} value={index}>
@@ -106,7 +106,7 @@ export const MarketDetailPage = () => {
 
               <button
                 onClick={handleResolve}
-                disabled={!canResolveNow || market.status === 'fermé' || resolveMarketMutation.isPending}
+                disabled={!canResolveNow || market.status === 'resolved' || resolveMarketMutation.isPending}
                 className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 disabled:opacity-50 font-medium"
               >
                 {resolveMarketMutation.isPending ? 'Fin du bet en cours...' : 'Finir le bet'}

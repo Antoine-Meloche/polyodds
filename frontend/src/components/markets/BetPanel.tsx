@@ -11,7 +11,7 @@ export const BetPanel = ({ market }: { market: MarketWithPools }) => {
   const { placeBet, isPending, errorMessage } = useBet();
   const isCreator = !!user && user.id === market.creator_id;
 
-  if (market.status !== 'ouvert') {
+  if (market.status !== 'open') {
     return (
       <div className="app-panel p-4">
         <p className="text-center text-muted-foreground">Ce bet est {market.status}</p>

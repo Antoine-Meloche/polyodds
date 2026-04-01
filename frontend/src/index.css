@@ -62,6 +62,38 @@ a {
 	color: var(--color-primary);
 }
 
+a.bg-primary,
+a.bg-primary:link,
+a.bg-primary:visited,
+a.bg-primary:hover,
+a.bg-primary:active {
+	color: var(--color-primary-foreground);
+}
+
+a.bg-accent,
+a.bg-accent:link,
+a.bg-accent:visited,
+a.bg-accent:hover,
+a.bg-accent:active {
+	color: var(--color-accent-foreground);
+}
+
+a.bg-secondary,
+a.bg-secondary:link,
+a.bg-secondary:visited,
+a.bg-secondary:hover,
+a.bg-secondary:active {
+	color: var(--color-secondary-foreground);
+}
+
+a.bg-destructive,
+a.bg-destructive:link,
+a.bg-destructive:visited,
+a.bg-destructive:hover,
+a.bg-destructive:active {
+	color: var(--color-destructive-foreground);
+}
+
 input,
 textarea,
 select {
@@ -86,6 +118,51 @@ button,
 
 button:hover {
 	transform: translateY(-1px);
+}
+
+button:active:not(:disabled) {
+	transform: translateY(0);
+	filter: brightness(0.94);
+}
+
+button.bg-primary:active:not(:disabled) {
+	color: var(--color-primary-foreground);
+	background-color: color-mix(in srgb, var(--color-primary) 88%, black);
+}
+
+a.bg-primary:active {
+	color: var(--color-primary-foreground);
+	background-color: color-mix(in srgb, var(--color-primary) 88%, black);
+}
+
+button.bg-accent:active:not(:disabled) {
+	color: var(--color-accent-foreground);
+	background-color: color-mix(in srgb, var(--color-accent) 88%, black);
+}
+
+a.bg-accent:active {
+	color: var(--color-accent-foreground);
+	background-color: color-mix(in srgb, var(--color-accent) 88%, black);
+}
+
+button.bg-secondary:active:not(:disabled) {
+	color: var(--color-secondary-foreground);
+	background-color: color-mix(in srgb, var(--color-secondary) 86%, black);
+}
+
+a.bg-secondary:active {
+	color: var(--color-secondary-foreground);
+	background-color: color-mix(in srgb, var(--color-secondary) 86%, black);
+}
+
+button.bg-destructive:active:not(:disabled) {
+	color: var(--color-destructive-foreground);
+	background-color: color-mix(in srgb, var(--color-destructive) 88%, black);
+}
+
+a.bg-destructive:active {
+	color: var(--color-destructive-foreground);
+	background-color: color-mix(in srgb, var(--color-destructive) 88%, black);
 }
 
 ::selection {

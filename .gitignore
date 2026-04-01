@@ -6,3 +6,4 @@ PLAN.md
 generated
 playwright-report
 test-results
+.last-run.json

@@ -3,7 +3,7 @@ import { categoriesAPI } from '@/api/categories';
 
 export interface MarketFiltersState {
   category_id?: string;
-  status?: 'ouvert' | 'fermé';
+  status?: 'open' | 'resolved';
   sort?: 'volume' | 'newest';
   search?: string;
 }
