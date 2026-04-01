@@ -353,6 +353,17 @@ pub async fn create_market(
     .fetch_one(&state.pool)
     .await?;
 
+    let initial_probabilities = probabilities_from_pools(&pools);
+    sqlx::query(
+        "INSERT INTO probability_snapshots (market_id, probabilities, recorded_at)
+         VALUES ($1, $2, $3)",
+    )
+    .bind(market.id)
+    .bind(initial_probabilities)
+    .bind(market.created_at)
+    .execute(&state.pool)
+    .await?;
+
     broadcast_market_event(&state.market_events, market.id, KIND_NEW_MARKET, STATUS_OPEN, pools);
 
     Ok(Json(market))

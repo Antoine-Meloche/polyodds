@@ -20,6 +20,7 @@ export const useBet = () => {
     onSuccess: (_data, variables) => {
       // Invalidate related queries
       queryClient.invalidateQueries({ queryKey: ['markets', variables.market_id] });
+      queryClient.invalidateQueries({ queryKey: ['markets', variables.market_id, 'history'] });
       queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
     },
   });
