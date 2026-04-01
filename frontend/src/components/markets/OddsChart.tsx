@@ -3,6 +3,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Referenc
 import type { ProbabilitySnapshot } from '@/types';
 
 const WINDOW_SIZE = 24;
+const STABLE_POINT_INTERVAL_MS = 1000;
 
 export const OddsChart = ({ history, outcomes }: { history: ProbabilitySnapshot[]; outcomes: string[] }) => {
   const [now, setNow] = useState(() => Date.now());
@@ -38,15 +39,45 @@ export const OddsChart = ({ history, outcomes }: { history: ProbabilitySnapshot[
       toPoint(new Date(snapshot.recorded_at).getTime(), snapshot.probabilities, index),
     );
 
+    if (base.length === 1) {
+      const onlyPoint = base[0];
+
+      base.unshift({
+        ...onlyPoint,
+        index: 0,
+        timestamp: onlyPoint.timestamp - STABLE_POINT_INTERVAL_MS,
+      });
+
+      base[1] = {
+        ...base[1],
+        index: 1,
+      };
+    }
+
     const last = base[base.length - 1];
     if (!last) return base;
 
     if (now > last.timestamp) {
-      base.push({
-        index: base.length,
-        timestamp: now,
-        ...Object.fromEntries(outcomes.map((o) => [o, last[o as keyof typeof last] as number])),
-      });
+      const stableValues = Object.fromEntries(outcomes.map((o) => [o, last[o as keyof typeof last] as number]));
+
+      let nextTimestamp = last.timestamp + STABLE_POINT_INTERVAL_MS;
+      while (nextTimestamp <= now) {
+        base.push({
+          index: base.length,
+          timestamp: nextTimestamp,
+          ...stableValues,
+        });
+
+        nextTimestamp += STABLE_POINT_INTERVAL_MS;
+      }
+
+      if (base[base.length - 1]?.timestamp !== now) {
+        base.push({
+          index: base.length,
+          timestamp: now,
+          ...stableValues,
+        });
+      }
     }
 
     return base;
