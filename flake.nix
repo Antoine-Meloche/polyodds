@@ -15,7 +15,10 @@
     flake-utils.lib.eachDefaultSystem (
       system:
       let
-        pkgs = nixpkgs.legacyPackages.${system};
+        pkgs = import nixpkgs {
+          system = "x86_64-linux";
+          config.allowUnfree = true;
+        };
       in
       {
         devShells.default = pkgs.mkShell {
@@ -25,6 +28,7 @@
             sqlx-cli
             pkg-config
             openssl
+            claude-code
           ];
 
           shellHook = ''

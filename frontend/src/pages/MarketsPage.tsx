@@ -1,10 +1,29 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useMarkets } from '@/hooks/useMarkets';
 import { MarketList } from '@/components/markets/MarketList';
 import { MarketFilters, type MarketFiltersState } from '@/components/markets/MarketFilters';
 import { PaginationControls } from '@/components/shared/PaginationControls';
 
 export const MarketsPage = () => {
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const ws = new WebSocket(`${protocol}//${window.location.host}/api/markets/ws`);
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.kind === 'new_market') {
+          queryClient.invalidateQueries({ queryKey: ['markets'] });
+        }
+      } catch {}
+    };
+
+    return () => ws.close();
+  }, [queryClient]);
+
   const [filters, setFilters] = useState<MarketFiltersState & { limit: number; offset: number }>({
     limit: 12,
     offset: 0,

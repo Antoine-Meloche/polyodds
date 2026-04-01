@@ -224,9 +224,19 @@ pub async fn create_market(
     .bind(payload.category_id)
     .bind(auth.user_id)
     .bind(payload.outcomes)
-    .bind(pools)
+    .bind(pools.clone())
     .fetch_one(&state.pool)
     .await?;
+
+    let probabilities = probabilities_from_pools(&pools);
+    let _ = state.market_events.send(MarketRealtimeEvent {
+        market_id: market.id,
+        kind: "new_market".to_string(),
+        status: "open".to_string(),
+        total_volume: pools.iter().sum(),
+        pools,
+        probabilities,
+    });
 
     Ok(Json(market))
 }
@@ -604,6 +614,39 @@ pub async fn place_bet(
         new_balance,
         probabilities_after,
     }))
+}
+
+pub async fn markets_global_ws(
+    State(state): State<AppState>,
+    ws: WebSocketUpgrade,
+) -> impl IntoResponse {
+    let mut rx = state.market_events.subscribe();
+    ws.on_upgrade(move |mut socket| async move {
+        loop {
+            tokio::select! {
+                incoming = socket.recv() => {
+                    match incoming {
+                        Some(Ok(Message::Close(_))) | None | Some(Err(_)) => break,
+                        _ => {}
+                    }
+                }
+                event = rx.recv() => {
+                    match event {
+                        Ok(payload) if payload.kind == "new_market" => {
+                            if let Ok(text) = serde_json::to_string(&payload) {
+                                if socket.send(Message::Text(text)).await.is_err() {
+                                    break;
+                                }
+                            }
+                        }
+                        Ok(_) => {}
+                        Err(broadcast::error::RecvError::Lagged(_)) => {}
+                        Err(broadcast::error::RecvError::Closed) => break,
+                    }
+                }
+            }
+        }
+    })
 }
 
 pub async fn market_ws(

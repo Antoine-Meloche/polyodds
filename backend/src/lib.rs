@@ -45,6 +45,7 @@ pub async fn build_app(config: AppConfig) -> anyhow::Result<Router> {
         .route("/api/markets/:id", get(markets::get_market).patch(markets::update_market))
         .route("/api/markets/:id/resolve", post(markets::resolve_market))
         .route("/api/markets/:id/history", get(markets::market_history))
+        .route("/api/markets/ws", get(markets::markets_global_ws))
         .route("/api/markets/:id/ws", get(markets::market_ws))
         .route("/api/markets/:id/bets", get(markets::market_bets_for_me))
         .route("/api/markets/:id/bet", post(markets::place_bet))
