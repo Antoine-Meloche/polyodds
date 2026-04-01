@@ -35,6 +35,42 @@ const INITIAL_POOL_POINTS_PER_OUTCOME: i64 = 500;
 const SPREAD_BPS: f64 = 150.0;
 const MIN_PRICE: f64 = 0.01;
 
+const STATUS_OPEN: &str = "open";
+const STATUS_RESOLVED: &str = "resolved";
+const KIND_TRADE: &str = "trade";
+const KIND_NEW_MARKET: &str = "new_market";
+const KIND_RESOLVED: &str = "resolved";
+const SIDE_BUY: &str = "buy";
+const SIDE_SELL: &str = "sell";
+
+async fn ensure_market_exists(pool: &sqlx::PgPool, id: Uuid) -> AppResult<()> {
+    sqlx::query_as::<_, (Uuid,)>("SELECT id FROM markets WHERE id = $1")
+        .bind(id)
+        .fetch_optional(pool)
+        .await?
+        .ok_or(AppError::NotFound)?;
+    Ok(())
+}
+
+fn broadcast_market_event(
+    sender: &broadcast::Sender<MarketRealtimeEvent>,
+    market_id: Uuid,
+    kind: &str,
+    status: &str,
+    pools: Vec<i64>,
+) {
+    let probabilities = probabilities_from_pools(&pools);
+    let total_volume = pools.iter().sum();
+    let _ = sender.send(MarketRealtimeEvent {
+        market_id,
+        kind: kind.to_string(),
+        status: status.to_string(),
+        pools,
+        total_volume,
+        probabilities,
+    });
+}
+
 pub async fn list_markets(
     State(state): State<AppState>,
     Query(query): Query<MarketListQuery>,
@@ -228,15 +264,7 @@ pub async fn create_market(
     .fetch_one(&state.pool)
     .await?;
 
-    let probabilities = probabilities_from_pools(&pools);
-    let _ = state.market_events.send(MarketRealtimeEvent {
-        market_id: market.id,
-        kind: "new_market".to_string(),
-        status: "open".to_string(),
-        total_volume: pools.iter().sum(),
-        pools,
-        probabilities,
-    });
+    broadcast_market_event(&state.market_events, market.id, KIND_NEW_MARKET, STATUS_OPEN, pools);
 
     Ok(Json(market))
 }
@@ -260,7 +288,7 @@ pub async fn update_market(
     if market.creator_id != auth.user_id {
         return Err(AppError::Forbidden);
     }
-    if market.status != "open" {
+    if market.status != STATUS_OPEN {
         return Err(AppError::BadRequest("Only open markets can be edited".to_string()));
     }
 
@@ -306,7 +334,7 @@ pub async fn resolve_market(
     if row.creator_id != auth.user_id {
         return Err(AppError::Forbidden);
     }
-    if row.status == "resolved" {
+    if row.status == STATUS_RESOLVED {
         return Err(AppError::BadRequest("Market already resolved".to_string()));
     }
     if payload.winning_outcome_index < 0
@@ -318,14 +346,17 @@ pub async fn resolve_market(
     let total_pool: i64 = row.pools.iter().sum();
     let winning_pool = *row.pools.get(payload.winning_outcome_index as usize).unwrap_or(&0);
 
-    sqlx::query(
+    let resolved = sqlx::query_as::<_, Market>(
         "UPDATE markets
-            SET status = 'resolved', winning_outcome_index = $2, updated_at = NOW()
-         WHERE id = $1",
+            SET status = $3, winning_outcome_index = $2, updated_at = NOW()
+         WHERE id = $1
+         RETURNING id, title, description, category_id, creator_id, outcomes, status,
+                   winning_outcome_index, created_at",
     )
     .bind(id)
     .bind(payload.winning_outcome_index)
-    .execute(&mut *tx)
+    .bind(STATUS_RESOLVED)
+    .fetch_one(&mut *tx)
     .await?;
 
     if total_pool > 0 && winning_pool > 0 {
@@ -351,24 +382,7 @@ pub async fn resolve_market(
 
     tx.commit().await?;
 
-    let probabilities = probabilities_from_pools(&row.pools);
-    let _ = state.market_events.send(MarketRealtimeEvent {
-        market_id: id,
-        kind: "resolved".to_string(),
-        status: "resolved".to_string(),
-        pools: row.pools.clone(),
-        total_volume: row.pools.iter().sum(),
-        probabilities,
-    });
-
-    let resolved = sqlx::query_as::<_, Market>(
-        "SELECT id, title, description, category_id, creator_id, outcomes, status,
-                winning_outcome_index, created_at
-         FROM markets WHERE id = $1",
-    )
-    .bind(id)
-    .fetch_one(&state.pool)
-    .await?;
+    broadcast_market_event(&state.market_events, id, KIND_RESOLVED, STATUS_RESOLVED, row.pools);
 
     Ok(Json(resolved))
 }
@@ -378,11 +392,7 @@ pub async fn market_history(
     _maybe_auth: MaybeAuthUser,
     Path(id): Path<Uuid>,
 ) -> AppResult<Json<MarketHistoryResponse>> {
-    let _ = sqlx::query_as::<_, (Uuid,)>("SELECT id FROM markets WHERE id = $1")
-        .bind(id)
-        .fetch_optional(&state.pool)
-        .await?
-        .ok_or(AppError::NotFound)?;
+    ensure_market_exists(&state.pool, id).await?;
 
     let history = sqlx::query_as::<_, ProbabilitySnapshot>(
         "SELECT recorded_at, probabilities
@@ -426,8 +436,8 @@ pub async fn place_bet(
         return Err(AppError::Validation("amount must be > 0".to_string()));
     }
 
-    let side = payload.side.unwrap_or_else(|| "buy".to_string());
-    if side != "buy" && side != "sell" {
+    let side = payload.side.unwrap_or_else(|| SIDE_BUY.to_string());
+    if side != SIDE_BUY && side != SIDE_SELL {
         return Err(AppError::Validation("side must be either 'buy' or 'sell'".to_string()));
     }
 
@@ -452,7 +462,7 @@ pub async fn place_bet(
         ));
     }
 
-    if row.status != "open" {
+    if row.status != STATUS_OPEN {
         return Err(AppError::BadRequest("Market is not open".to_string()));
     }
     if payload.outcome_index < 0 || payload.outcome_index as usize >= row.outcomes.len() {
@@ -479,7 +489,7 @@ pub async fn place_bet(
     let mut pools = row.pools;
     let idx = payload.outcome_index as usize;
 
-    let new_balance = if side == "buy" {
+    let new_balance = if side == SIDE_BUY {
         if points < payload.amount {
             return Err(AppError::BadRequest("Insufficient points".to_string()));
         }
@@ -600,14 +610,7 @@ pub async fn place_bet(
 
     tx.commit().await?;
 
-    let _ = state.market_events.send(MarketRealtimeEvent {
-        market_id: id,
-        kind: "trade".to_string(),
-        status: row.status,
-        pools: pools.clone(),
-        total_volume: pools.iter().sum(),
-        probabilities: probabilities_after.clone(),
-    });
+    broadcast_market_event(&state.market_events, id, KIND_TRADE, &row.status, pools);
 
     Ok(Json(BetResponse {
         bet,
@@ -632,7 +635,7 @@ pub async fn markets_global_ws(
                 }
                 event = rx.recv() => {
                     match event {
-                        Ok(payload) if payload.kind == "new_market" => {
+                        Ok(payload) if payload.kind == KIND_NEW_MARKET => {
                             if let Ok(text) = serde_json::to_string(&payload) {
                                 if socket.send(Message::Text(text)).await.is_err() {
                                     break;
@@ -655,11 +658,7 @@ pub async fn market_ws(
     Path(id): Path<Uuid>,
     ws: WebSocketUpgrade,
 ) -> AppResult<impl IntoResponse> {
-    let _ = sqlx::query_as::<_, (Uuid,)>("SELECT id FROM markets WHERE id = $1")
-        .bind(id)
-        .fetch_optional(&state.pool)
-        .await?
-        .ok_or(AppError::NotFound)?;
+    ensure_market_exists(&state.pool, id).await?;
 
     let mut rx = state.market_events.subscribe();
     Ok(ws.on_upgrade(move |mut socket| async move {
@@ -693,19 +692,8 @@ pub async fn market_ws(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::routes::handlers::test_helpers::test_state;
     use axum::extract::State;
-    use sqlx::postgres::PgPoolOptions;
-
-    fn test_state() -> AppState {
-        let (market_events, _) = tokio::sync::broadcast::channel(32);
-        AppState {
-            pool: PgPoolOptions::new()
-                .connect_lazy("postgres://local:local@localhost:5432/local")
-                .expect("lazy pool should be created"),
-            jwt_secret: "abcdefghijklmnopqrstuvwxyz123456".to_string(),
-            market_events,
-        }
-    }
 
     #[tokio::test]
     async fn create_market_rejects_less_than_two_outcomes_before_db_call() {

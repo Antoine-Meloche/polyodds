@@ -1,5 +1,6 @@
 import client from './client';
 import type {
+  Bet,
   CreateMarketRequest,
   Market,
   MarketHistoryResponse,
@@ -51,7 +52,7 @@ export const marketsAPI = {
     return res.data.history;
   },
 
-  fetchMarketBets: async (id: string): Promise<any[]> => {
+  fetchMarketBets: async (id: string): Promise<Bet[]> => {
     const res = await client.get(`/markets/${id}/bets`);
     return res.data.bets;
   },

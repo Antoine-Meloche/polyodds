@@ -66,6 +66,8 @@ impl IntoResponse for AppError {
 
 pub type AppResult<T> = Result<T, AppError>;
 
+pub const PG_UNIQUE_VIOLATION: &str = "23505";
+
 #[cfg(test)]
 mod tests {
     use super::*;

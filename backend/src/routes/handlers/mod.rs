@@ -3,6 +3,23 @@ pub mod categories;
 pub mod markets;
 pub mod users;
 
+#[cfg(test)]
+pub(crate) mod test_helpers {
+    use crate::state::AppState;
+    use sqlx::postgres::PgPoolOptions;
+
+    pub fn test_state() -> AppState {
+        let (market_events, _) = tokio::sync::broadcast::channel(32);
+        AppState {
+            pool: PgPoolOptions::new()
+                .connect_lazy("postgres://local:local@localhost:5432/local")
+                .expect("lazy pool should be created"),
+            jwt_secret: "abcdefghijklmnopqrstuvwxyz123456".to_string(),
+            market_events,
+        }
+    }
+}
+
 fn page_limit(limit: Option<i64>) -> i64 {
     limit.unwrap_or(20).clamp(1, 100)
 }

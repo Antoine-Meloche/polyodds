@@ -16,9 +16,9 @@ test('bets feature: authenticated user can place a bet on a market they did not 
 
   await page.goto(`/bets/${market.id}`);
   await expect(page.getByRole('heading', { name: marketTitle })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Placer un bet' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Placer une mise' })).toBeVisible();
 
-  const betPanel = page.locator('div.app-panel').filter({ has: page.getByRole('heading', { name: 'Placer un bet' }) });
+  const betPanel = page.locator('div.app-panel').filter({ has: page.getByRole('heading', { name: 'Placer une mise' }) });
 
   await betPanel.getByRole('button', { name: 'Yes' }).click();
   await betPanel.locator('input[type="number"]').fill('25');
@@ -29,7 +29,7 @@ test('bets feature: authenticated user can place a bet on a market they did not 
   const placeBetResponse = await placeBetResponsePromise;
   expect(placeBetResponse.ok(), await placeBetResponse.text()).toBeTruthy();
 
-  await expect(betPanel.getByText("Vous n'avez pas assez de points pour ce bet.")).toHaveCount(0);
+  await expect(betPanel.getByText("Vous n'avez pas assez de points pour cette mise.")).toHaveCount(0);
 
   const meAfterBetRes = await request.get('/api/auth/me', {
     headers: {

@@ -1,6 +1,5 @@
 import { useParams } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { AxiosError } from 'axios';
 import { useEffect, useState } from 'react';
 import { marketsAPI } from '@/api/markets';
 import { useMarketDetail, useMarketHistory } from '@/hooks/useMarkets';
@@ -9,6 +8,8 @@ import { BetPanel } from '@/components/markets/BetPanel';
 import { OddsChart } from '@/components/markets/OddsChart';
 import { OutcomeBadge } from '@/components/markets/OutcomeBadge';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
+import { getWsUrl } from '@/utils/ws';
+import { getAxiosErrorMessage } from '@/utils/errors';
 
 export const MarketDetailPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -21,8 +22,7 @@ export const MarketDetailPage = () => {
   useEffect(() => {
     if (!id) return;
 
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const ws = new WebSocket(`${protocol}//${window.location.host}/api/markets/${id}/ws`);
+    const ws = new WebSocket(getWsUrl(`/api/markets/${id}/ws`));
 
     ws.onmessage = () => {
       queryClient.invalidateQueries({ queryKey: ['markets', id] });
@@ -48,12 +48,7 @@ export const MarketDetailPage = () => {
   const isCreator = !!user && user.id === market.creator_id;
   const canResolveNow = market.status !== 'resolved';
 
-  const resolveErrorMessage =
-    resolveMarketMutation.error instanceof AxiosError
-      ? resolveMarketMutation.error.response?.data?.error ?? resolveMarketMutation.error.message
-      : resolveMarketMutation.error instanceof Error
-        ? resolveMarketMutation.error.message
-        : null;
+  const resolveErrorMessage = getAxiosErrorMessage(resolveMarketMutation.error);
 
   const handleResolve = () => {
     if (!canResolveNow || resolveMarketMutation.isPending) return;

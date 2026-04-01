@@ -71,5 +71,5 @@ test('protected pages render for an authenticated user', async ({ page, request 
   await expect(page.getByRole('heading', { name: seed.username })).toBeVisible();
 
   await expectNoRuntimeErrorsOnPath(page, '/bets/create');
-  await expect(page.getByRole('heading', { name: 'Créer un bet' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Créer un marché' })).toBeVisible();
 });

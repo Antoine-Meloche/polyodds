@@ -1,5 +1,5 @@
 use crate::{
-    error::{AppError, AppResult},
+    error::{AppError, AppResult, PG_UNIQUE_VIOLATION},
     routes::models::categories::{CategoriesResponse, Category, CategoryCreateRequest},
     state::AppState,
 };
@@ -29,7 +29,7 @@ pub async fn create_category(
     .fetch_one(&state.pool)
     .await
     .map_err(|e| match &e {
-        sqlx::Error::Database(db_err) if db_err.code().as_deref() == Some("23505") => {
+        sqlx::Error::Database(db_err) if db_err.code().as_deref() == Some(PG_UNIQUE_VIOLATION) => {
             AppError::Conflict("Category slug already exists".to_string())
         }
         _ => AppError::Db(e),

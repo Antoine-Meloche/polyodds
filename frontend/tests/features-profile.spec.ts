@@ -7,7 +7,7 @@ test('profile feature: view own profile page and stats blocks', async ({ page, r
 
   await page.goto(`/profile/${seededUser.user.id}`);
   await expect(page.getByRole('heading', { name: seededUser.user.username })).toBeVisible();
-  await expect(page.getByText('Bets créés')).toBeVisible();
-  await expect(page.getByText('Bets placés')).toBeVisible();
-  await expect(page.getByText('Bets gagnés')).toBeVisible();
+  await expect(page.getByText('Marchés créés')).toBeVisible();
+  await expect(page.getByText('Mises placées')).toBeVisible();
+  await expect(page.getByText('Mises gagnées')).toBeVisible();
 });

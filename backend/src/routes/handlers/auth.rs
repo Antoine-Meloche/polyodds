@@ -1,6 +1,6 @@
 use crate::{
     auth::{encode_token, hash_password, validate_password, validate_username, verify_password, AuthUser},
-    error::{AppError, AppResult},
+    error::{AppError, AppResult, PG_UNIQUE_VIOLATION},
     routes::models::{
         auth::{AuthResponse, DailyClaimResponse, LoginRequest, RegisterRequest},
         users::User,
@@ -65,7 +65,7 @@ pub async fn register(
     .fetch_one(&state.pool)
     .await
     .map_err(|e| match &e {
-        sqlx::Error::Database(db_err) if db_err.code().as_deref() == Some("23505") => {
+        sqlx::Error::Database(db_err) if db_err.code().as_deref() == Some(PG_UNIQUE_VIOLATION) => {
             AppError::Conflict("Username already exists".to_string())
         }
         _ => AppError::Db(e),
@@ -172,20 +172,9 @@ pub async fn daily_claim(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::routes::handlers::test_helpers::test_state;
     use crate::routes::models::auth::RegisterRequest;
     use axum::extract::State;
-    use sqlx::postgres::PgPoolOptions;
-
-    fn test_state() -> AppState {
-        let (market_events, _) = tokio::sync::broadcast::channel(32);
-        AppState {
-            pool: PgPoolOptions::new()
-                .connect_lazy("postgres://local:local@localhost:5432/local")
-                .expect("lazy pool should be created"),
-            jwt_secret: "abcdefghijklmnopqrstuvwxyz123456".to_string(),
-            market_events,
-        }
-    }
 
     #[tokio::test]
     async fn register_rejects_invalid_username_before_db_call() {

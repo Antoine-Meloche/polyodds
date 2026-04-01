@@ -29,7 +29,7 @@ export const ProfilePage = () => {
     enabled: !!id,
   });
 
-  const uniqueMarketIds = Array.from(new Set((betsData?.bets || []).map((bet) => bet.market_id)));
+  const uniqueMarketIds = [...new Set((betsData?.bets || []).map((bet) => bet.market_id))];
   const marketQueries = useQueries({
     queries: uniqueMarketIds.map((marketId) => ({
       queryKey: ['markets', marketId],
@@ -38,13 +38,12 @@ export const ProfilePage = () => {
     })),
   });
 
-  const marketTitleById = new Map<string, string>();
-  uniqueMarketIds.forEach((marketId, index) => {
-    const title = marketQueries[index]?.data?.title;
-    if (title) {
-      marketTitleById.set(marketId, title);
-    }
-  });
+  const marketTitleById = new Map(
+    uniqueMarketIds.flatMap((marketId, index) => {
+      const title = marketQueries[index]?.data?.title;
+      return title ? [[marketId, title] as const] : [];
+    })
+  );
 
   const isOwnProfile = !!authUser && !!id && authUser.id === id;
 

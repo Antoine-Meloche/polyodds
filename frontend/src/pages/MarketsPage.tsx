@@ -1,16 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useMarkets } from '@/hooks/useMarkets';
+import { getWsUrl } from '@/utils/ws';
 import { MarketList } from '@/components/markets/MarketList';
 import { MarketFilters, type MarketFiltersState } from '@/components/markets/MarketFilters';
 import { PaginationControls } from '@/components/shared/PaginationControls';
+import { DailyClaimBanner } from '@/components/shared/DailyClaimBanner';
 
 export const MarketsPage = () => {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const ws = new WebSocket(`${protocol}//${window.location.host}/api/markets/ws`);
+    const ws = new WebSocket(getWsUrl('/api/markets/ws'));
 
     ws.onmessage = (event) => {
       try {
@@ -42,6 +43,8 @@ export const MarketsPage = () => {
 
   return (
     <div className="space-y-6">
+      <DailyClaimBanner />
+
       <div className="app-panel p-5">
         <div className="flex flex-col gap-4">
           <div>
