@@ -4,3 +4,5 @@
 .env.*
 PLAN.md
 generated
+playwright-report
+test-results
