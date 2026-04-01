@@ -14,10 +14,10 @@ FROM rust:1-bookworm AS builder
 WORKDIR /workspace
 
 COPY Cargo.toml Cargo.lock ./
-COPY crates/backend/Cargo.toml crates/backend/Cargo.toml
-RUN mkdir -p crates/backend/src
-RUN printf "fn main() {}\n" > crates/backend/src/main.rs
-RUN printf "\n" > crates/backend/src/lib.rs
+COPY backend/Cargo.toml backend/Cargo.toml
+RUN mkdir -p backend/src
+RUN printf "fn main() {}\n" > backend/src/main.rs
+RUN printf "\n" > backend/src/lib.rs
 RUN cargo fetch
 
 COPY . .
@@ -33,7 +33,7 @@ RUN apt-get update \
 
 COPY --from=builder /workspace/target/release/backend /usr/local/bin/backend
 COPY --from=dev /usr/local/cargo/bin/sqlx /usr/local/bin/sqlx
-COPY /migrations /app/migrations
+COPY migrations /app/migrations
 
 EXPOSE 3000
 

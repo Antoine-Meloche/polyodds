@@ -6,55 +6,25 @@ services:
     container_name: polyodds-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: polyodds
-      POSTGRES_USER: polyodds
-      POSTGRES_PASSWORD: polyodds
-    ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      POSTGRES_DB: ${POSTGRES_DB:-polyodds}
+      POSTGRES_USER: ${POSTGRES_USER:-polyodds}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U polyodds -d polyodds"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-polyodds} -d ${POSTGRES_DB:-polyodds}",
+        ]
       interval: 5s
       timeout: 5s
       retries: 10
 
-  backend-debug:
-    build:
-      context: .
-      dockerfile: crates/backend/Dockerfile
-      target: dev
-    container_name: polyodds-backend-debug
-    working_dir: /workspace
-    depends_on:
-      postgres:
-        condition: service_healthy
-    environment:
-      DATABASE_URL: postgres://polyodds:polyodds@postgres:5432/polyodds
-      JWT_SECRET: dev_only_secret_change_me_32_chars_min
-      BIND_ADDR: 0.0.0.0:3000
-      FRONTEND_ORIGIN: http://localhost:5173
-      RUST_LOG: backend=debug,tower_http=info
-    ports:
-      - "3000:3000"
-    volumes:
-      - .:/workspace
-      - cargo_registry:/usr/local/cargo/registry
-      - cargo_git:/usr/local/cargo/git
-      - target:/workspace/target
-    command: >
-      sh -lc "
-        sqlx database create || true &&
-        sqlx migrate run &&
-        cargo watch -x 'run -p backend'
-      "
-    profiles:
-      - debug
-
   backend:
     build:
       context: .
-      dockerfile: crates/backend/Dockerfile
+      dockerfile: backend/Dockerfile
       target: runtime
     container_name: polyodds-backend
     restart: unless-stopped
@@ -62,20 +32,24 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgres://polyodds:polyodds@postgres:5432/polyodds
-      JWT_SECRET: dev_only_secret_change_me_32_chars_min
+      DATABASE_URL: postgres://${POSTGRES_USER:-polyodds}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}@postgres:5432/${POSTGRES_DB:-polyodds}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set and at least 32 characters}
       BIND_ADDR: 0.0.0.0:3000
-      FRONTEND_ORIGIN: http://localhost:5173
-      RUST_LOG: backend=info,tower_http=info
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost}
+      RUST_LOG: ${RUST_LOG:-backend=info,tower_http=info}
+    expose:
+      - "3000"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: polyodds-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
     ports:
-      - "3000:3000"
-    command: >-
-      sh -lc "sqlx migrate run && backend"
-    profiles:
-      - app
+      - "${FRONTEND_PORT:-80}:80"
 
 volumes:
   pgdata:
-  cargo_registry:
-  cargo_git:
-  target:
