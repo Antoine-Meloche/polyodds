@@ -6,8 +6,8 @@ interface PointsBadgeProps {
 }
 
 export const PointsBadge = ({ points }: PointsBadgeProps) => (
-  <div className="flex items-center gap-2 px-3 py-1 bg-secondary rounded-full text-sm font-medium">
-    <PointsIcon className="text-amber-600" />
+  <div className="app-pill flex items-center gap-2 px-3 py-1 text-sm font-medium text-foreground">
+    <PointsIcon className="text-accent" />
     <span>{formatPoints(points)}</span>
   </div>
 );

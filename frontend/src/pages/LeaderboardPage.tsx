@@ -8,9 +8,9 @@ import { PaginationControls } from '@/components/shared/PaginationControls';
 import { formatPoints } from '@/utils/points';
 
 const rankIconClassName: Record<number, string> = {
-  1: 'text-amber-500',
-  2: 'text-slate-400',
-  3: 'text-orange-700',
+  1: 'text-secondary-foreground',
+  2: 'text-primary',
+  3: 'text-accent',
 };
 
 export const LeaderboardPage = () => {
@@ -34,10 +34,10 @@ export const LeaderboardPage = () => {
         <p className="text-muted-foreground">Meilleurs gagnants de points</p>
       </div>
 
-      <div className="border rounded-lg overflow-hidden">
+      <div className="app-panel overflow-hidden">
         <table className="w-full">
           <thead>
-            <tr className="border-b bg-secondary">
+            <tr className="border-b border-primary/20 bg-secondary">
               <th className="px-4 py-3 text-left text-sm font-semibold">Rang</th>
               <th className="px-4 py-3 text-left text-sm font-semibold">Utilisateur</th>
               <th className="px-4 py-3 text-right text-sm font-semibold">Points</th>
@@ -45,7 +45,7 @@ export const LeaderboardPage = () => {
           </thead>
           <tbody>
             {data.users.map((entry) => (
-              <tr key={entry.id} className="border-b hover:bg-secondary transition-colors">
+              <tr key={entry.id} className="border-b border-primary/10 hover:bg-secondary transition-colors">
                 <td className="px-4 py-3 text-sm font-semibold">
                   {entry.rank <= 3 && (
                     <RankIcon className={rankIconClassName[entry.rank]} />

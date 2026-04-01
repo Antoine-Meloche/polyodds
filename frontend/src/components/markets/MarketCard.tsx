@@ -9,7 +9,7 @@ interface MarketCardProps {
 export const MarketCard = ({ market }: MarketCardProps) => {
   return (
     <Link to={`/bets/${market.id}`}>
-      <div className="border rounded-lg p-4 hover:shadow-lg transition-shadow h-full bg-card">
+      <div className="app-panel p-4 hover:shadow-[0_18px_30px_rgba(87,104,175,0.16)] transition-shadow h-full">
         <div className="space-y-3">
           <h3 className="font-semibold line-clamp-2">{market.title}</h3>
 
@@ -21,7 +21,7 @@ export const MarketCard = ({ market }: MarketCardProps) => {
             ))}
           </div>
 
-          <div className="flex items-center justify-between pt-2 border-t text-xs text-muted-foreground">
+          <div className="flex items-center justify-between pt-2 border-t border-primary/15 text-xs text-muted-foreground">
             <span>Status: {market.status}</span>
           </div>
         </div>

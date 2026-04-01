@@ -17,7 +17,7 @@ export const PaginationControls = ({
       <button
         onClick={() => onOffsetChange(Math.max(0, offset - limit))}
         disabled={offset === 0}
-        className="px-4 py-2 border rounded-lg disabled:opacity-50"
+        className="px-4 py-2 border border-primary/25 rounded-lg disabled:opacity-50 hover:bg-secondary"
       >
         Previous
       </button>
@@ -27,7 +27,7 @@ export const PaginationControls = ({
       <button
         onClick={() => onOffsetChange(offset + limit)}
         disabled={offset + limit >= total}
-        className="px-4 py-2 border rounded-lg disabled:opacity-50"
+        className="px-4 py-2 border border-primary/25 rounded-lg disabled:opacity-50 hover:bg-secondary"
       >
         Next
       </button>

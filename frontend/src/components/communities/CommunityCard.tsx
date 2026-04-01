@@ -10,16 +10,16 @@ type CommunityCardData = Community & {
 export const CommunityCard = ({ community }: { community: CommunityCardData }) => {
   return (
     <Link to={`/communities/${community.id}`}>
-      <div className="border rounded-lg p-4 hover:shadow-lg transition-shadow bg-card">
+      <div className="app-panel p-4 hover:shadow-[0_18px_30px_rgba(87,104,175,0.16)] transition-shadow">
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="font-semibold line-clamp-1">{community.name}</h3>
-            {community.is_private && <span className="text-xs bg-secondary px-2 py-1 rounded">Privée</span>}
+            {community.is_private && <span className="text-xs bg-secondary text-secondary-foreground px-2 py-1 rounded">Privée</span>}
           </div>
 
           <p className="text-sm text-muted-foreground line-clamp-2">{community.description}</p>
 
-          <div className="flex items-center justify-between pt-2 border-t text-xs text-muted-foreground">
+          <div className="flex items-center justify-between pt-2 border-t border-primary/15 text-xs text-muted-foreground">
             <span className="inline-flex items-center gap-1.5">
               <MembersIcon className="size-3.5" />
               <span>{community.member_count || 0} members</span>

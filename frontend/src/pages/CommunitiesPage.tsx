@@ -11,7 +11,9 @@ export const CommunitiesPage = () => {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold">Communautés</h1>
+      <div className="app-panel p-5">
+        <h1 className="text-3xl font-bold text-primary">Communautés</h1>
+      </div>
 
       <CommunityList communities={data?.communities || []} isLoading={isLoading} />
 

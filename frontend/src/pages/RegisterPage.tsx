@@ -31,13 +31,13 @@ export const RegisterPage = () => {
   return (
     <div className="flex items-center justify-center min-h-screen bg-background">
       <div className="w-full max-w-md">
-        <div className="border rounded-lg p-8 bg-card">
+        <div className="app-panel p-8">
           <h1 className="mb-8 flex items-center justify-center gap-2 text-2xl font-bold text-center">
             <BrandIcon className="text-primary" />
             <span>Créer un compte</span>
           </h1>
 
-          {error && <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-lg text-sm">{error}</div>}
+          {error && <div className="mb-4 p-3 bg-destructive/10 text-destructive border border-destructive/30 rounded-lg text-sm">{error}</div>}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>

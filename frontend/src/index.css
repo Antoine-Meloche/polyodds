@@ -1,1 +1,107 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Manrope:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
+
+@theme {
+	--color-background: #f8f8f8;
+	--color-foreground: #1f2440;
+	--color-card: #ffffff;
+	--color-primary: #5768af;
+	--color-primary-foreground: #f8f8f8;
+	--color-secondary: #ffefc6;
+	--color-secondary-foreground: #3b2a00;
+	--color-muted: #edf0fa;
+	--color-muted-foreground: #606682;
+	--color-border: #d7ddf3;
+	--color-input: #d7ddf3;
+	--color-ring: #f38b00;
+	--color-accent: #f38b00;
+	--color-accent-foreground: #2c1a00;
+	--color-destructive: #ff4d02;
+	--color-destructive-foreground: #fff2ed;
+}
+
+:root {
+	color: #1f2440;
+	background-color: #f8f8f8;
+}
+
+* {
+	transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease,
+		box-shadow 220ms ease, transform 220ms ease;
+}
+
+html,
+body,
+#root {
+	min-height: 100%;
+}
+
+body {
+	margin: 0;
+	font-family: 'Manrope', sans-serif;
+	color: var(--color-foreground);
+	background:
+		radial-gradient(circle at 8% 6%, rgba(87, 104, 175, 0.15) 0%, rgba(87, 104, 175, 0) 42%),
+		radial-gradient(circle at 92% 12%, rgba(255, 180, 3, 0.2) 0%, rgba(255, 180, 3, 0) 34%),
+		linear-gradient(180deg, #ffffff 0%, #f8f8f8 100%);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.font-bold,
+.font-semibold {
+	font-family: 'Space Grotesk', 'Manrope', sans-serif;
+	letter-spacing: -0.02em;
+}
+
+a {
+	color: var(--color-primary);
+}
+
+input,
+textarea,
+select {
+	border-color: var(--color-input);
+	background: #ffffff;
+	box-shadow: inset 0 1px 2px rgba(87, 104, 175, 0.08);
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+	outline: 2px solid color-mix(in srgb, var(--color-ring) 52%, transparent);
+	outline-offset: 1px;
+	border-color: color-mix(in srgb, var(--color-primary) 55%, white);
+}
+
+button,
+.rounded-lg,
+.rounded-full {
+	border-radius: 0.9rem;
+}
+
+button:hover {
+	transform: translateY(-1px);
+}
+
+::selection {
+	background: color-mix(in srgb, var(--color-primary) 45%, white);
+	color: #ffffff;
+}
+
+.app-panel {
+	border: 1px solid color-mix(in srgb, var(--color-primary) 22%, white);
+	border-radius: 1rem;
+	background: linear-gradient(160deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 248, 248, 0.96) 100%);
+	box-shadow: 0 14px 34px rgba(87, 104, 175, 0.08);
+}
+
+.app-pill {
+	border: 1px solid color-mix(in srgb, var(--color-primary) 22%, white);
+	border-radius: 999px;
+	background: linear-gradient(125deg, rgba(255, 180, 3, 0.2) 0%, rgba(255, 255, 255, 0.9) 100%);
+}

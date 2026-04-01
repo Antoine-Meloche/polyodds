@@ -21,7 +21,7 @@ export const MarketFilters = ({
   });
 
   return (
-    <div className="flex gap-4 flex-wrap">
+    <div className="app-panel p-4 flex gap-4 flex-wrap">
       <select
         value={filters.category_id || ''}
         onChange={(e) =>
@@ -30,7 +30,7 @@ export const MarketFilters = ({
             category_id: e.target.value || undefined,
           })
         }
-        className="px-3 py-2 border rounded-lg text-sm bg-background"
+        className="px-3 py-2 border border-primary/25 rounded-lg text-sm bg-background"
       >
         <option value="">Toutes les catégories</option>
         {categoriesData?.categories.map((cat) => (
@@ -48,7 +48,7 @@ export const MarketFilters = ({
             status: (e.target.value as any) || undefined,
           })
         }
-        className="px-3 py-2 border rounded-lg text-sm bg-background"
+        className="px-3 py-2 border border-primary/25 rounded-lg text-sm bg-background"
       >
         <option value="">Tous les statuts</option>
         <option value="open">Ouvert</option>
@@ -63,7 +63,7 @@ export const MarketFilters = ({
             sort: (e.target.value as any) || 'newest',
           })
         }
-        className="px-3 py-2 border rounded-lg text-sm bg-background"
+        className="px-3 py-2 border border-primary/25 rounded-lg text-sm bg-background"
       >
         <option value="newest">Plus récent</option>
         <option value="volume">Volume</option>
@@ -79,7 +79,7 @@ export const MarketFilters = ({
             search: e.target.value || undefined,
           })
         }
-        className="px-3 py-2 border rounded-lg text-sm flex-1 min-w-[200px]"
+        className="px-3 py-2 border border-primary/25 rounded-lg text-sm flex-1 min-w-[200px]"
       />
     </div>
   );

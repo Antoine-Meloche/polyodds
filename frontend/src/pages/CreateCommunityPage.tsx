@@ -44,7 +44,7 @@ export const CreateCommunityPage = () => {
         <p className="text-muted-foreground">Faites des bets sur des insides</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="border rounded-lg p-6 bg-card space-y-6">
+      <form onSubmit={handleSubmit} className="app-panel p-6 space-y-6">
         {/* Name */}
         <div>
           <label className="block text-sm font-medium mb-2">Nom de la communauté *</label>
@@ -93,7 +93,7 @@ export const CreateCommunityPage = () => {
         </button>
 
         {createMutation.error && (
-          <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm">
+          <div className="p-3 bg-destructive/10 text-destructive border border-destructive/30 rounded-lg text-sm">
             {(createMutation.error as any).message}
           </div>
         )}

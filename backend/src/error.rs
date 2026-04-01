@@ -65,3 +65,54 @@ impl IntoResponse for AppError {
 }
 
 pub type AppResult<T> = Result<T, AppError>;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use axum::body::to_bytes;
+
+    #[test]
+    fn status_and_code_are_mapped_consistently() {
+        let cases = vec![
+            (AppError::Unauthorized, StatusCode::UNAUTHORIZED, "UNAUTHORIZED"),
+            (AppError::Forbidden, StatusCode::FORBIDDEN, "FORBIDDEN"),
+            (AppError::NotFound, StatusCode::NOT_FOUND, "NOT_FOUND"),
+            (
+                AppError::BadRequest("oops".to_string()),
+                StatusCode::BAD_REQUEST,
+                "BAD_REQUEST",
+            ),
+            (
+                AppError::Validation("bad".to_string()),
+                StatusCode::BAD_REQUEST,
+                "VALIDATION_ERROR",
+            ),
+            (
+                AppError::Conflict("exists".to_string()),
+                StatusCode::CONFLICT,
+                "CONFLICT",
+            ),
+            (AppError::Internal, StatusCode::INTERNAL_SERVER_ERROR, "INTERNAL_ERROR"),
+        ];
+
+        for (err, expected_status, expected_code) in cases {
+            assert_eq!(err.status_code(), expected_status);
+            assert_eq!(err.code(), expected_code);
+        }
+    }
+
+    #[tokio::test]
+    async fn into_response_contains_error_and_code() {
+        let response = AppError::Validation("Username invalid".to_string()).into_response();
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+
+        let body_bytes = to_bytes(response.into_body(), usize::MAX)
+            .await
+            .expect("response body should be readable");
+        let body: serde_json::Value =
+            serde_json::from_slice(&body_bytes).expect("response should be valid json");
+
+        assert_eq!(body["code"], "VALIDATION_ERROR");
+        assert_eq!(body["error"], "Validation failed: Username invalid");
+    }
+}

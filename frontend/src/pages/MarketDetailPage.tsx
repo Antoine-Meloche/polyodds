@@ -53,7 +53,7 @@ export const MarketDetailPage = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           {/* Bet Info */}
-          <div className="border rounded-lg p-4 bg-card">
+          <div className="app-panel p-4">
             <h2 className="font-semibold mb-3">Informations du Bet</h2>
             <div className="space-y-2 text-sm">
               <p>Statut: <span className="font-medium">{market.status}</span></p>
@@ -62,11 +62,11 @@ export const MarketDetailPage = () => {
           </div>
 
           {/* Outcomes & Pools */}
-          <div className="border rounded-lg p-4 bg-card">
+          <div className="app-panel p-4">
             <h2 className="font-semibold mb-3">Résultats</h2>
             <div className="space-y-3">
               {market.pools.map((pool, index) => (
-                <div key={index} className="flex items-center justify-between p-3 border rounded-lg bg-secondary">
+                <div key={index} className="flex items-center justify-between p-3 border border-primary/20 rounded-lg bg-secondary">
                   <OutcomeBadge outcome={pool.outcome} index={index} />
                   <div className="text-sm space-y-1 text-right">
                     <p className="text-muted-foreground">Bassin: {pool.total_points}</p>
@@ -78,7 +78,7 @@ export const MarketDetailPage = () => {
           </div>
 
           {isCreator && (
-            <div className="border rounded-lg p-4 bg-card space-y-3">
+            <div className="app-panel p-4 space-y-3">
               <h2 className="font-semibold">Options d'administration</h2>
               <p className="text-sm text-muted-foreground">
                 En tant que créateur, vous pouvez terminer ce bet et sélectionner l'option gagnante.
@@ -101,7 +101,7 @@ export const MarketDetailPage = () => {
               </div>
 
               {resolveErrorMessage && (
-                <div className="text-red-600 text-sm">{resolveErrorMessage}</div>
+                <div className="text-destructive text-sm">{resolveErrorMessage}</div>
               )}
 
               <button
@@ -116,7 +116,7 @@ export const MarketDetailPage = () => {
 
           {/* Probability Chart */}
           {history && history.length > 0 && (
-            <div className="border rounded-lg p-4 bg-card">
+            <div className="app-panel p-4">
               <h2 className="font-semibold mb-3">Historique des probabilités</h2>
               <OddsChart history={history} outcomes={market.outcomes} />
             </div>

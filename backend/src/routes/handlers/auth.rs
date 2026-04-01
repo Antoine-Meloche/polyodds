@@ -168,3 +168,44 @@ pub async fn daily_claim(
 
     Ok((StatusCode::OK, Json(body)).into_response())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::routes::models::auth::RegisterRequest;
+    use axum::extract::State;
+    use sqlx::postgres::PgPoolOptions;
+
+    fn test_state() -> AppState {
+        AppState {
+            pool: PgPoolOptions::new()
+                .connect_lazy("postgres://local:local@localhost:5432/local")
+                .expect("lazy pool should be created"),
+            jwt_secret: "abcdefghijklmnopqrstuvwxyz123456".to_string(),
+        }
+    }
+
+    #[tokio::test]
+    async fn register_rejects_invalid_username_before_db_call() {
+        let state = test_state();
+        let payload = RegisterRequest {
+            username: "ab".to_string(),
+            password: "valid-password".to_string(),
+        };
+
+        let result = register(State(state), Json(payload)).await;
+        assert!(matches!(result, Err(AppError::Validation(_))));
+    }
+
+    #[tokio::test]
+    async fn register_rejects_short_password_before_db_call() {
+        let state = test_state();
+        let payload = RegisterRequest {
+            username: "valid-user".to_string(),
+            password: "short".to_string(),
+        };
+
+        let result = register(State(state), Json(payload)).await;
+        assert!(matches!(result, Err(AppError::Validation(_))));
+    }
+}

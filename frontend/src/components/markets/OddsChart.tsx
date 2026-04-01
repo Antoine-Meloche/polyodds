@@ -11,15 +11,15 @@ export const OddsChart = ({ history, outcomes }: { history: ProbabilitySnapshot[
     ...Object.fromEntries(outcomes.map((o, i) => [o, Math.round(snapshot.probabilities[i] * 100)])),
   }));
 
-  const colors = ['#3b82f6', '#ef4444', '#10b981', '#a855f7', '#f59e0b', '#ec4899'];
+  const colors = ['#5768AF', '#FFB403', '#F38B00', '#FF4D02', '#7B88C2', '#B35A2A'];
 
   return (
     <div className="w-full h-80">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="time" />
-          <YAxis domain={[0, 100]} label={{ value: 'Probability (%)', angle: -90, position: 'insideLeft' }} />
+          <CartesianGrid strokeDasharray="3 3" stroke="#d7ddf3" />
+          <XAxis dataKey="time" stroke="#606682" />
+          <YAxis domain={[0, 100]} stroke="#606682" label={{ value: 'Probability (%)', angle: -90, position: 'insideLeft' }} />
           <Tooltip formatter={(value) => `${value}%`} />
           <Legend />
           {outcomes.map((outcome, index) => (

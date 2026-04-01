@@ -4,7 +4,7 @@ export const MemberList = ({ members }: { members: CommunityMember[] }) => {
   return (
     <div className="space-y-2">
       {members.map((member) => (
-        <div key={member.user_id} className="flex items-center justify-between p-3 border rounded-lg">
+        <div key={member.user_id} className="flex items-center justify-between p-3 border border-primary/20 bg-card/90 rounded-lg">
           <div>
             <p className="font-medium">{member.user_id}</p>
             <p className="text-xs text-muted-foreground">Rôle: {member.role}</p>

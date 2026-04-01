@@ -42,7 +42,7 @@ export const CommunityDetailPage = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between border-b pb-6">
+      <div className="app-panel p-6 flex items-start justify-between">
         <div>
           <h1 className="text-3xl font-bold mb-2">{community.name}</h1>
           <p className="text-muted-foreground">{community.description}</p>
@@ -77,7 +77,7 @@ export const CommunityDetailPage = () => {
             <button
               onClick={() => leaveMutation.mutate()}
               disabled={leaveMutation.isPending}
-              className="px-4 py-2 border rounded-lg hover:bg-secondary disabled:opacity-50"
+              className="px-4 py-2 border border-primary/25 rounded-lg hover:bg-secondary disabled:opacity-50"
             >
               {leaveMutation.isPending ? 'Départ en cours...' : 'Quitter'}
             </button>

@@ -530,3 +530,52 @@ pub async fn place_bet(
         probabilities_after,
     }))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use axum::extract::State;
+    use sqlx::postgres::PgPoolOptions;
+
+    fn test_state() -> AppState {
+        AppState {
+            pool: PgPoolOptions::new()
+                .connect_lazy("postgres://local:local@localhost:5432/local")
+                .expect("lazy pool should be created"),
+            jwt_secret: "abcdefghijklmnopqrstuvwxyz123456".to_string(),
+        }
+    }
+
+    #[tokio::test]
+    async fn create_market_rejects_less_than_two_outcomes_before_db_call() {
+        let state = test_state();
+        let auth = AuthUser {
+            user_id: Uuid::new_v4(),
+        };
+        let payload = CreateMarketRequest {
+            title: "Will it rain?".to_string(),
+            description: "Weather market".to_string(),
+            category_id: Uuid::new_v4(),
+            community_id: None,
+            outcomes: vec!["Yes".to_string()],
+        };
+
+        let result = create_market(State(state), auth, Json(payload)).await;
+        assert!(matches!(result, Err(AppError::Validation(_))));
+    }
+
+    #[tokio::test]
+    async fn place_bet_rejects_non_positive_amount_before_db_call() {
+        let state = test_state();
+        let auth = AuthUser {
+            user_id: Uuid::new_v4(),
+        };
+        let payload = PlaceBetRequest {
+            outcome_index: 0,
+            amount: 0,
+        };
+
+        let result = place_bet(State(state), auth, Path(Uuid::new_v4()), Json(payload)).await;
+        assert!(matches!(result, Err(AppError::Validation(_))));
+    }
+}

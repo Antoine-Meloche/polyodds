@@ -1,10 +1,10 @@
 const colors = [
-  'bg-red-100 text-red-800',
-  'bg-blue-100 text-blue-800',
-  'bg-green-100 text-green-800',
-  'bg-purple-100 text-purple-800',
-  'bg-yellow-100 text-yellow-800',
-  'bg-pink-100 text-pink-800',
+  'bg-primary/15 text-primary border border-primary/35',
+  'bg-secondary text-secondary-foreground border border-secondary-foreground/20',
+  'bg-accent/18 text-accent-foreground border border-accent/40',
+  'bg-destructive/12 text-destructive border border-destructive/30',
+  'bg-muted text-foreground border border-primary/20',
+  'bg-primary/10 text-foreground border border-primary/28',
 ];
 
 export const OutcomeBadge = ({ outcome, index }: { outcome: string; index: number }) => {

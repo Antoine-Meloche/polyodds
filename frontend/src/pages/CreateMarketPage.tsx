@@ -76,7 +76,7 @@ export const CreateMarketPage = () => {
         <p className="text-muted-foreground">Créez un nouveau bet de prédiction académique</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="border rounded-lg p-6 bg-card space-y-6">
+      <form onSubmit={handleSubmit} className="app-panel p-6 space-y-6">
         {/* Title */}
         <div>
           <label className="block text-sm font-medium mb-2">Titre *</label>
@@ -163,7 +163,7 @@ export const CreateMarketPage = () => {
                   <button
                     type="button"
                     onClick={() => removeOutcome(index)}
-                    className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg text-sm"
+                    className="px-3 py-2 text-destructive hover:bg-destructive/10 rounded-lg text-sm"
                   >
                     Supprimer
                   </button>
@@ -183,7 +183,7 @@ export const CreateMarketPage = () => {
         </button>
 
         {createMutation.error && (
-          <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm">
+          <div className="p-3 bg-destructive/10 text-destructive border border-destructive/30 rounded-lg text-sm">
             {(createMutation.error as any).message}
           </div>
         )}

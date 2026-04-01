@@ -16,27 +16,27 @@ export const Sidebar = () => {
   const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/');
 
   return (
-    <aside className="w-64 border-r bg-card sticky top-16 h-[calc(100vh-64px)] overflow-y-auto">
+    <aside className="w-64 border-r border-primary/20 bg-card/80 sticky top-16 h-[calc(100vh-64px)] overflow-y-auto backdrop-blur-sm">
       <div className="p-4 space-y-6">
         {/* Navigation */}
         <nav className="space-y-2">
           <Link
             to="/"
-            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${isActive('/') ? 'bg-secondary font-semibold' : 'hover:bg-secondary'}`}
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${isActive('/') ? 'bg-primary text-primary-foreground font-semibold shadow-[0_8px_18px_rgba(87,104,175,0.28)]' : 'hover:bg-secondary'}`}
           >
             <HomeIcon className="size-4 shrink-0" />
             <span>Accueil</span>
           </Link>
           <Link
             to="/bets"
-            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${isActive('/bets') && location.pathname !== '/bets/create' ? 'bg-secondary font-semibold' : 'hover:bg-secondary'}`}
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${isActive('/bets') && location.pathname !== '/bets/create' ? 'bg-primary text-primary-foreground font-semibold shadow-[0_8px_18px_rgba(87,104,175,0.28)]' : 'hover:bg-secondary'}`}
           >
             <MarketsIcon className="size-4 shrink-0" />
             <span>Tous les bets</span>
           </Link>
           <Link
             to="/leaderboard"
-            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${isActive('/leaderboard') ? 'bg-secondary font-semibold' : 'hover:bg-secondary'}`}
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${isActive('/leaderboard') ? 'bg-primary text-primary-foreground font-semibold shadow-[0_8px_18px_rgba(87,104,175,0.28)]' : 'hover:bg-secondary'}`}
           >
             <LeaderboardIcon className="size-4 shrink-0" />
             <span>Classement</span>
@@ -81,16 +81,16 @@ export const Sidebar = () => {
         </div>
 
         {/* Create Actions */}
-        <div className="border-t pt-4 space-y-2">
+        <div className="border-t border-primary/15 pt-4 space-y-2">
           <Link
             to="/bets/create"
-            className="block px-3 py-2 rounded-lg text-sm bg-primary text-primary-foreground hover:opacity-90 text-center font-medium"
+            className="block px-3 py-2 rounded-lg text-sm bg-primary text-primary-foreground hover:opacity-90 text-center font-medium shadow-[0_10px_20px_rgba(87,104,175,0.26)]"
           >
             + Créer un bet
           </Link>
           <Link
             to="/communities/create"
-            className="block px-3 py-2 rounded-lg text-sm border hover:bg-secondary text-center font-medium"
+            className="block px-3 py-2 rounded-lg text-sm border border-primary/25 hover:bg-secondary text-center font-medium"
           >
             + Créer une communauté
           </Link>

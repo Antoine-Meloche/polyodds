@@ -123,3 +123,117 @@ pub fn validate_username(username: &str) -> bool {
 pub fn validate_password(password: &str) -> bool {
     password.len() >= 8
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::state::AppState;
+    use axum::{
+        body::Body,
+        extract::FromRequestParts,
+        http::{self, Request},
+    };
+    use sqlx::postgres::PgPoolOptions;
+
+    fn test_state(secret: &str) -> AppState {
+        AppState {
+            pool: PgPoolOptions::new()
+                .connect_lazy("postgres://local:local@localhost:5432/local")
+                .expect("lazy pool should be created"),
+            jwt_secret: secret.to_string(),
+        }
+    }
+
+    #[test]
+    fn username_validation_enforces_constraints() {
+        assert!(!validate_username(""));
+        assert!(!validate_username("ab"));
+        assert!(validate_username("abc"));
+        assert!(validate_username("  spaced_name  "));
+        assert!(!validate_username(&"x".repeat(33)));
+    }
+
+    #[test]
+    fn password_validation_enforces_min_length() {
+        assert!(!validate_password("1234567"));
+        assert!(validate_password("12345678"));
+    }
+
+    #[test]
+    fn password_hash_and_verify_work() {
+        let hashed = hash_password("secure-password").expect("hashing should succeed");
+        assert!(verify_password("secure-password", &hashed).expect("verify should succeed"));
+        assert!(!verify_password("wrong-password", &hashed).expect("verify should succeed"));
+    }
+
+    #[test]
+    fn encode_and_decode_round_trip() {
+        let user_id = Uuid::new_v4();
+        let secret = "abcdefghijklmnopqrstuvwxyz123456";
+
+        let token = encode_token(user_id, secret).expect("token should encode");
+        let claims = decode_token(&token, secret).expect("token should decode");
+
+        assert_eq!(claims.sub, user_id);
+        assert!(claims.exp > claims.iat);
+    }
+
+    #[test]
+    fn decode_token_rejects_wrong_secret() {
+        let user_id = Uuid::new_v4();
+        let token = encode_token(user_id, "abcdefghijklmnopqrstuvwxyz123456")
+            .expect("token should encode");
+
+        let result = decode_token(&token, "different_secret_abcdefghijklmnopqrstuvwxyz");
+        assert!(matches!(result, Err(AppError::Unauthorized)));
+    }
+
+    #[tokio::test]
+    async fn auth_user_extractor_accepts_valid_bearer_token() {
+        let secret = "abcdefghijklmnopqrstuvwxyz123456";
+        let state = test_state(secret);
+        let user_id = Uuid::new_v4();
+        let token = encode_token(user_id, secret).expect("token should encode");
+
+        let req = Request::builder()
+            .uri("/api/auth/me")
+            .header(http::header::AUTHORIZATION, format!("Bearer {}", token))
+            .body(Body::empty())
+            .expect("request should build");
+        let (mut parts, _) = req.into_parts();
+
+        let auth = AuthUser::from_request_parts(&mut parts, &state)
+            .await
+            .expect("extractor should succeed");
+        assert_eq!(auth.user_id, user_id);
+    }
+
+    #[tokio::test]
+    async fn maybe_auth_user_returns_none_without_header() {
+        let state = test_state("abcdefghijklmnopqrstuvwxyz123456");
+        let req = Request::builder()
+            .uri("/api/markets")
+            .body(Body::empty())
+            .expect("request should build");
+        let (mut parts, _) = req.into_parts();
+
+        let maybe = MaybeAuthUser::from_request_parts(&mut parts, &state)
+            .await
+            .expect("extractor should not fail without header");
+        assert!(maybe.0.is_none());
+    }
+
+    #[tokio::test]
+    async fn maybe_auth_user_rejects_invalid_token_when_present() {
+        let state = test_state("abcdefghijklmnopqrstuvwxyz123456");
+        let req = Request::builder()
+            .uri("/api/markets")
+            .header(http::header::AUTHORIZATION, "Bearer not-a-token")
+            .body(Body::empty())
+            .expect("request should build");
+        let (mut parts, _) = req.into_parts();
+
+        let result = MaybeAuthUser::from_request_parts(&mut parts, &state).await;
+        assert!(matches!(result, Err(AppError::Unauthorized)));
+    }
+}

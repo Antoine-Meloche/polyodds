@@ -13,7 +13,7 @@ export const BetPanel = ({ market }: { market: MarketWithPools }) => {
 
   if (market.status !== 'ouvert') {
     return (
-      <div className="border rounded-lg p-4 bg-card">
+      <div className="app-panel p-4">
         <p className="text-center text-muted-foreground">Ce bet est {market.status}</p>
       </div>
     );
@@ -21,7 +21,7 @@ export const BetPanel = ({ market }: { market: MarketWithPools }) => {
 
   if (isCreator) {
     return (
-      <div className="border rounded-lg p-4 bg-card">
+      <div className="app-panel p-4">
         <p className="text-center text-muted-foreground">
           En tant que créateur du bet, vous ne pouvez pas parier sur votre propre bet.
         </p>
@@ -40,7 +40,7 @@ export const BetPanel = ({ market }: { market: MarketWithPools }) => {
   };
 
   return (
-    <div className="border rounded-lg p-4 bg-card space-y-4">
+    <div className="app-panel p-4 space-y-4">
       <h3 className="font-semibold">Placer un bet</h3>
 
       <div className="space-y-2">
@@ -62,7 +62,7 @@ export const BetPanel = ({ market }: { market: MarketWithPools }) => {
         </div>
       </div>
 
-      <div className="bg-secondary p-3 rounded-lg space-y-2 text-sm">
+      <div className="bg-secondary p-3 rounded-lg space-y-2 text-sm border border-primary/20">
         <div className="flex justify-between">
           <span>Probabilité actuelle:</span>
           <span className="font-semibold">{formatProbability(probability)}</span>
@@ -89,20 +89,20 @@ export const BetPanel = ({ market }: { market: MarketWithPools }) => {
         )}
       </div>
 
-      <div className="bg-green-200 p-3 rounded-lg space-y-2 text-sm">
+      <div className="bg-accent/16 p-3 rounded-lg space-y-2 text-sm border border-accent/30">
         <div className="flex justify-between">
           <span>Gain potentiel:</span>
-          <span className="font-semibold text-green-700">
+          <span className="font-semibold text-accent-foreground">
             {formatPayout(amount, probability)}
           </span>
         </div>
       </div>
 
       {exceedsBalance && (
-        <div className="text-red-600 text-sm">Vous n'avez pas assez de points pour ce bet.</div>
+        <div className="text-destructive text-sm">Vous n'avez pas assez de points pour ce bet.</div>
       )}
 
-      {errorMessage && !exceedsBalance && <div className="text-red-600 text-sm">{errorMessage}</div>}
+      {errorMessage && !exceedsBalance && <div className="text-destructive text-sm">{errorMessage}</div>}
 
       <button
         onClick={handleBet}
