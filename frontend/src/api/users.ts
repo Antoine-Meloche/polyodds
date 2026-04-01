@@ -27,4 +27,8 @@ export const usersAPI = {
     const res = await client.get('/leaderboard', { params });
     return res.data;
   },
+
+  deleteMe: async (): Promise<void> => {
+    await client.delete('/users/me');
+  },
 };

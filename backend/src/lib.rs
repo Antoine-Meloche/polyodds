@@ -4,7 +4,7 @@ pub mod error;
 pub mod routes;
 pub mod state;
 
-use axum::{routing::{get, post}, Router};
+use axum::{routing::{delete, get, post}, Router};
 use config::AppConfig;
 use routes::handlers::{auth as auth_handlers, categories, markets, users};
 use sqlx::postgres::PgPoolOptions;
@@ -39,6 +39,7 @@ pub async fn build_app(config: AppConfig) -> anyhow::Result<Router> {
         .route("/api/categories", get(categories::list_categories).post(categories::create_category))
         .route("/api/users/:id", get(users::get_user))
         .route("/api/users/:id/bets", get(users::get_user_bets))
+        .route("/api/users/me", delete(users::delete_me))
         .route("/api/leaderboard", get(users::leaderboard))
         .route("/api/markets", get(markets::list_markets).post(markets::create_market))
         .route("/api/markets/:id", get(markets::get_market).patch(markets::update_market))

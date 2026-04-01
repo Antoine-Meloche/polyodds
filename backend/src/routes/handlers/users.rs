@@ -1,4 +1,5 @@
 use crate::{
+    auth::AuthUser,
     error::{AppError, AppResult},
     routes::models::{
         markets::Bet,
@@ -17,6 +18,7 @@ use crate::{
 };
 use axum::{
     extract::{Path, Query, State},
+    http::StatusCode,
     Json,
 };
 use uuid::Uuid;
@@ -125,4 +127,20 @@ pub async fn leaderboard(
         .await?;
 
     Ok(Json(LeaderboardResponse { users, total }))
+}
+
+pub async fn delete_me(
+    State(state): State<AppState>,
+    auth: AuthUser,
+) -> AppResult<StatusCode> {
+    let deleted = sqlx::query("DELETE FROM users WHERE id = $1")
+        .bind(auth.user_id)
+        .execute(&state.pool)
+        .await?;
+
+    if deleted.rows_affected() == 0 {
+        return Err(AppError::NotFound);
+    }
+
+    Ok(StatusCode::NO_CONTENT)
 }

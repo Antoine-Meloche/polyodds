@@ -1,13 +1,16 @@
 import { useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { useQuery, useQueries } from '@tanstack/react-query';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useQuery, useQueries, useMutation } from '@tanstack/react-query';
 import { usersAPI } from '@/api/users';
 import { marketsAPI } from '@/api/markets';
+import { useAuth } from '@/hooks/useAuth';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { PointsBadge } from '@/components/shared/PointsBadge';
 
 export const ProfilePage = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { user: authUser, logout } = useAuth();
   const [tab, setTab] = useState<'open' | 'resolved'>('open');
 
   const { data: user, isLoading: userLoading } = useQuery({
@@ -43,6 +46,25 @@ export const ProfilePage = () => {
     }
   });
 
+  const isOwnProfile = !!authUser && !!id && authUser.id === id;
+
+  const deleteAccountMutation = useMutation({
+    mutationFn: () => usersAPI.deleteMe(),
+    onSuccess: () => {
+      logout();
+      navigate('/register');
+    },
+  });
+
+  const handleDeleteAccount = () => {
+    if (!isOwnProfile || deleteAccountMutation.isPending) return;
+
+    const confirmed = window.confirm('Voulez-vous vraiment supprimer votre compte ? Cette action est irreversible.');
+    if (!confirmed) return;
+
+    deleteAccountMutation.mutate();
+  };
+
   if (userLoading || !user) return <LoadingSpinner />;
 
   return (
@@ -54,8 +76,24 @@ export const ProfilePage = () => {
             <h1 className="text-3xl font-bold">{user.username}</h1>
             <p className="text-sm text-muted-foreground">Rejoint le {new Date(user.created_at).toLocaleDateString('fr-CA')}</p>
           </div>
-          <PointsBadge points={user.points} />
+          <div className="flex items-start gap-3">
+            <PointsBadge points={user.points} />
+            {isOwnProfile && (
+              <button
+                type="button"
+                onClick={handleDeleteAccount}
+                disabled={deleteAccountMutation.isPending}
+                className="px-3 py-1.5 text-sm rounded-lg border border-destructive/50 text-destructive hover:bg-destructive/10 disabled:opacity-50"
+              >
+                {deleteAccountMutation.isPending ? 'Suppression...' : 'Supprimer mon compte'}
+              </button>
+            )}
+          </div>
         </div>
+
+        {deleteAccountMutation.error && (
+          <p className="text-sm text-destructive mb-2">Impossible de supprimer le compte. Veuillez reessayer.</p>
+        )}
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-4">
