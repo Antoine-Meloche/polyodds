@@ -32,7 +32,7 @@ pub struct MarketPool {
 #[ts(export, export_to = "markets/")]
 pub struct UserPosition {
     pub outcome_index: i32,
-    pub amount: i64,
+    pub shares: i64,
 }
 
 #[derive(Debug, Serialize, TS)]
@@ -54,6 +54,7 @@ pub struct Bet {
     pub user_id: Uuid,
     pub outcome_index: i32,
     pub amount: i64,
+    pub side: String,
     pub created_at: DateTime<Utc>,
 }
 
@@ -124,4 +125,17 @@ pub struct ResolveMarketRequest {
 pub struct PlaceBetRequest {
     pub outcome_index: i32,
     pub amount: i64,
+    pub side: Option<String>,
+}
+
+#[derive(Debug, Serialize, Clone, TS)]
+#[ts(export, export_to = "markets/")]
+pub struct MarketRealtimeEvent {
+    pub market_id: Uuid,
+    pub kind: String,
+    #[ts(type = "\"open\" | \"resolved\"")]
+    pub status: String,
+    pub pools: Vec<i64>,
+    pub probabilities: Vec<f64>,
+    pub total_volume: i64,
 }

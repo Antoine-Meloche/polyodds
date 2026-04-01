@@ -10,6 +10,7 @@ use routes::handlers::{auth as auth_handlers, categories, communities, markets, 
 use sqlx::postgres::PgPoolOptions;
 use state::AppState;
 use std::time::Duration;
+use tokio::sync::broadcast;
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
 
 pub async fn build_app(config: AppConfig) -> anyhow::Result<Router> {
@@ -22,9 +23,12 @@ pub async fn build_app(config: AppConfig) -> anyhow::Result<Router> {
     // Keep local/dev startup resilient by ensuring schema migrations are applied.
     sqlx::migrate!("../migrations").run(&pool).await?;
 
+    let (market_events, _) = broadcast::channel(512);
+
     let state = AppState {
         pool,
         jwt_secret: config.jwt_secret,
+        market_events,
     };
 
     let app = Router::new()
@@ -40,6 +44,7 @@ pub async fn build_app(config: AppConfig) -> anyhow::Result<Router> {
         .route("/api/markets/:id", get(markets::get_market).patch(markets::update_market))
         .route("/api/markets/:id/resolve", post(markets::resolve_market))
         .route("/api/markets/:id/history", get(markets::market_history))
+        .route("/api/markets/:id/ws", get(markets::market_ws))
         .route("/api/markets/:id/bets", get(markets::market_bets_for_me))
         .route("/api/markets/:id/bet", post(markets::place_bet))
         .route("/api/communities", get(communities::list_communities).post(communities::create_community))

@@ -9,6 +9,7 @@ use crate::{
         MarketHistoryResponse,
         MarketListQuery,
         MarketPool,
+        MarketRealtimeEvent,
         MarketWithPools,
         MarketsResponse,
         PlaceBetRequest,
@@ -20,10 +21,12 @@ use crate::{
     state::AppState,
 };
 use axum::{
-    extract::{Path, Query, State},
+    extract::{Path, Query, State, WebSocketUpgrade, ws::Message},
+    response::IntoResponse,
     Json,
 };
 use sqlx::FromRow;
+use tokio::sync::broadcast;
 use uuid::Uuid;
 
 use super::{
@@ -34,6 +37,10 @@ use super::{
     page_limit,
     page_offset,
 };
+
+const INITIAL_POOL_POINTS_PER_OUTCOME: i64 = 500;
+const SPREAD_BPS: f64 = 150.0;
+const MIN_PRICE: f64 = 0.01;
 
 pub async fn list_markets(
     State(state): State<AppState>,
@@ -109,6 +116,30 @@ struct MarketRow {
     community_private: Option<bool>,
 }
 
+fn probabilities_from_pools(pools: &[i64]) -> Vec<f64> {
+    let total: i64 = pools.iter().sum();
+    pools
+        .iter()
+        .map(|v| if total > 0 { *v as f64 / total as f64 } else { 0.0 })
+        .collect::<Vec<_>>()
+}
+
+fn quote_ask_price(pools: &[i64], outcome_index: usize, points_in: i64) -> f64 {
+    let total = pools.iter().sum::<i64>().max(1) as f64;
+    let base = (pools.get(outcome_index).copied().unwrap_or(0).max(1) as f64) / total;
+    let spread = SPREAD_BPS / 10_000.0;
+    let impact = (points_in.max(1) as f64) / total;
+    (base * (1.0 + spread / 2.0 + impact)).max(MIN_PRICE)
+}
+
+fn quote_bid_price(pools: &[i64], outcome_index: usize, shares_out: i64) -> f64 {
+    let total = pools.iter().sum::<i64>().max(1) as f64;
+    let base = (pools.get(outcome_index).copied().unwrap_or(0).max(1) as f64) / total;
+    let spread = SPREAD_BPS / 10_000.0;
+    let impact = (shares_out.max(1) as f64) / total;
+    (base * (1.0 - spread / 2.0 - impact)).max(MIN_PRICE)
+}
+
 pub async fn get_market(
     State(state): State<AppState>,
     maybe_auth: MaybeAuthUser,
@@ -159,11 +190,10 @@ pub async fn get_market(
 
     let user_position = if let Some(auth) = maybe_auth_user {
         sqlx::query_as::<_, (i32, i64)>(
-            "SELECT outcome_index, SUM(amount)::bigint AS amount
-             FROM bets
+            "SELECT outcome_index, shares
+             FROM market_positions
              WHERE market_id = $1 AND user_id = $2
-             GROUP BY outcome_index
-             ORDER BY amount DESC
+             ORDER BY shares DESC
              LIMIT 1",
         )
         .bind(row.id)
@@ -172,7 +202,7 @@ pub async fn get_market(
         .await?
         .map(|p| UserPosition {
             outcome_index: p.0,
-            amount: p.1,
+            shares: p.1,
         })
     } else {
         None
@@ -215,7 +245,7 @@ pub async fn create_market(
         }
     }
 
-    let pools = vec![0_i64; payload.outcomes.len()];
+    let pools = vec![INITIAL_POOL_POINTS_PER_OUTCOME; payload.outcomes.len()];
 
     let market = sqlx::query_as::<_, Market>(
         "INSERT INTO markets (title, description, category_id, community_id, creator_id, outcomes, status, pools)
@@ -330,10 +360,9 @@ pub async fn resolve_market(
 
     if total_pool > 0 && winning_pool > 0 {
         let winners = sqlx::query_as::<_, (Uuid, i64)>(
-            "SELECT user_id, SUM(amount)::bigint AS stake
-             FROM bets
-             WHERE market_id = $1 AND outcome_index = $2
-             GROUP BY user_id",
+            "SELECT user_id, shares AS stake
+             FROM market_positions
+             WHERE market_id = $1 AND outcome_index = $2 AND shares > 0",
         )
         .bind(id)
         .bind(payload.winning_outcome_index)
@@ -351,6 +380,16 @@ pub async fn resolve_market(
     }
 
     tx.commit().await?;
+
+    let probabilities = probabilities_from_pools(&row.pools);
+    let _ = state.market_events.send(MarketRealtimeEvent {
+        market_id: id,
+        kind: "resolved".to_string(),
+        status: "resolved".to_string(),
+        pools: row.pools.clone(),
+        total_volume: row.pools.iter().sum(),
+        probabilities,
+    });
 
     let resolved = sqlx::query_as::<_, Market>(
         "SELECT id, title, description, category_id, community_id, creator_id, outcomes, status,
@@ -405,7 +444,7 @@ pub async fn market_bets_for_me(
     Path(id): Path<Uuid>,
 ) -> AppResult<Json<serde_json::Value>> {
     let bets = sqlx::query_as::<_, Bet>(
-        "SELECT id, market_id, user_id, outcome_index, amount, created_at
+        "SELECT id, market_id, user_id, outcome_index, amount, side, created_at
          FROM bets
          WHERE market_id = $1 AND user_id = $2
          ORDER BY created_at DESC",
@@ -426,6 +465,11 @@ pub async fn place_bet(
 ) -> AppResult<Json<BetResponse>> {
     if payload.amount <= 0 {
         return Err(AppError::Validation("amount must be > 0".to_string()));
+    }
+
+    let side = payload.side.unwrap_or_else(|| "buy".to_string());
+    if side != "buy" && side != "sell" {
+        return Err(AppError::Validation("side must be either 'buy' or 'sell'".to_string()));
     }
 
     let mut tx = state.pool.begin().await?;
@@ -470,36 +514,121 @@ pub async fn place_bet(
         .await?
         .ok_or(AppError::Unauthorized)?;
 
-    if points < payload.amount {
-        return Err(AppError::BadRequest("Insufficient points".to_string()));
-    }
-
-    let (new_balance,) = sqlx::query_as::<_, (i64,)>(
-        "UPDATE users
-         SET points = points - $2, updated_at = NOW()
-         WHERE id = $1
-         RETURNING points",
+    let current_shares = sqlx::query_as::<_, (i64,)>(
+        "SELECT shares FROM market_positions WHERE market_id = $1 AND user_id = $2 AND outcome_index = $3",
     )
+    .bind(id)
     .bind(auth.user_id)
-    .bind(payload.amount)
-    .fetch_one(&mut *tx)
-    .await?;
+    .bind(payload.outcome_index)
+    .fetch_optional(&mut *tx)
+    .await?
+    .map(|row| row.0)
+    .unwrap_or(0);
+
+    let mut pools = row.pools;
+    let idx = payload.outcome_index as usize;
+
+    let new_balance = if side == "buy" {
+        if points < payload.amount {
+            return Err(AppError::BadRequest("Insufficient points".to_string()));
+        }
+        let ask_price = quote_ask_price(&pools, idx, payload.amount);
+        let minted_shares = ((payload.amount as f64) / ask_price).floor() as i64;
+        if minted_shares <= 0 {
+            return Err(AppError::BadRequest("Trade amount too small at current price".to_string()));
+        }
+
+        pools[idx] += payload.amount;
+
+        let (new_balance,) = sqlx::query_as::<_, (i64,)>(
+            "UPDATE users
+             SET points = points - $2, updated_at = NOW()
+             WHERE id = $1
+             RETURNING points",
+        )
+        .bind(auth.user_id)
+        .bind(payload.amount)
+        .fetch_one(&mut *tx)
+        .await?;
+
+        sqlx::query(
+            "INSERT INTO market_positions (market_id, user_id, outcome_index, shares)
+             VALUES ($1, $2, $3, $4)
+             ON CONFLICT (market_id, user_id, outcome_index)
+             DO UPDATE SET shares = market_positions.shares + EXCLUDED.shares, updated_at = NOW()",
+        )
+        .bind(id)
+        .bind(auth.user_id)
+        .bind(payload.outcome_index)
+        .bind(minted_shares)
+        .execute(&mut *tx)
+        .await?;
+
+        new_balance
+    } else {
+        let shares_to_sell = payload.amount;
+        if current_shares < shares_to_sell {
+            return Err(AppError::BadRequest("Insufficient shares to sell".to_string()));
+        }
+
+        let bid_price = quote_bid_price(&pools, idx, shares_to_sell);
+        let payout_points = ((shares_to_sell as f64) * bid_price).floor() as i64;
+        if payout_points <= 0 {
+            return Err(AppError::BadRequest("Sell amount too small at current price".to_string()));
+        }
+        if pools[idx] < payout_points {
+            return Err(AppError::BadRequest("Not enough liquidity in selected outcome pool".to_string()));
+        }
+        pools[idx] -= payout_points;
+
+        let (new_balance,) = sqlx::query_as::<_, (i64,)>(
+            "UPDATE users
+             SET points = points + $2, updated_at = NOW()
+             WHERE id = $1
+             RETURNING points",
+        )
+        .bind(auth.user_id)
+        .bind(payout_points)
+        .fetch_one(&mut *tx)
+        .await?;
+
+        sqlx::query(
+            "UPDATE market_positions
+             SET shares = shares - $4, updated_at = NOW()
+             WHERE market_id = $1 AND user_id = $2 AND outcome_index = $3",
+        )
+        .bind(id)
+        .bind(auth.user_id)
+        .bind(payload.outcome_index)
+        .bind(shares_to_sell)
+        .execute(&mut *tx)
+        .await?;
+
+        sqlx::query(
+            "DELETE FROM market_positions
+             WHERE market_id = $1 AND user_id = $2 AND outcome_index = $3 AND shares <= 0",
+        )
+        .bind(id)
+        .bind(auth.user_id)
+        .bind(payload.outcome_index)
+        .execute(&mut *tx)
+        .await?;
+
+        new_balance
+    };
 
     let bet = sqlx::query_as::<_, Bet>(
-        "INSERT INTO bets (market_id, user_id, outcome_index, amount)
-         VALUES ($1, $2, $3, $4)
-         RETURNING id, market_id, user_id, outcome_index, amount, created_at",
+        "INSERT INTO bets (market_id, user_id, outcome_index, amount, side)
+         VALUES ($1, $2, $3, $4, $5)
+         RETURNING id, market_id, user_id, outcome_index, amount, side, created_at",
     )
     .bind(id)
     .bind(auth.user_id)
     .bind(payload.outcome_index)
     .bind(payload.amount)
+    .bind(&side)
     .fetch_one(&mut *tx)
     .await?;
-
-    let mut pools = row.pools;
-    let idx = payload.outcome_index as usize;
-    pools[idx] += payload.amount;
 
     sqlx::query("UPDATE markets SET pools = $2, updated_at = NOW() WHERE id = $1")
         .bind(id)
@@ -507,11 +636,7 @@ pub async fn place_bet(
         .execute(&mut *tx)
         .await?;
 
-    let total: i64 = pools.iter().sum();
-    let probabilities_after = pools
-        .iter()
-        .map(|v| if total > 0 { *v as f64 / total as f64 } else { 0.0 })
-        .collect::<Vec<_>>();
+    let probabilities_after = probabilities_from_pools(&pools);
 
     sqlx::query(
         "INSERT INTO probability_snapshots (market_id, probabilities)
@@ -524,10 +649,71 @@ pub async fn place_bet(
 
     tx.commit().await?;
 
+    let _ = state.market_events.send(MarketRealtimeEvent {
+        market_id: id,
+        kind: "trade".to_string(),
+        status: row.status,
+        pools: pools.clone(),
+        total_volume: pools.iter().sum(),
+        probabilities: probabilities_after.clone(),
+    });
+
     Ok(Json(BetResponse {
         bet,
         new_balance,
         probabilities_after,
+    }))
+}
+
+pub async fn market_ws(
+    State(state): State<AppState>,
+    maybe_auth: MaybeAuthUser,
+    Path(id): Path<Uuid>,
+    ws: WebSocketUpgrade,
+) -> AppResult<impl IntoResponse> {
+    let market = sqlx::query_as::<_, (Option<Uuid>, Option<bool>)>(
+        "SELECT m.community_id, c.is_private
+         FROM markets m
+         LEFT JOIN communities c ON c.id = m.community_id
+         WHERE m.id = $1",
+    )
+    .bind(id)
+    .fetch_optional(&state.pool)
+    .await?
+    .ok_or(AppError::NotFound)?;
+
+    if market.1.unwrap_or(false) {
+        let auth = maybe_auth.0.ok_or(AppError::Unauthorized)?;
+        let community_id = market.0.ok_or(AppError::Forbidden)?;
+        ensure_community_member(&state, auth.user_id, community_id).await?;
+    }
+
+    let mut rx = state.market_events.subscribe();
+    Ok(ws.on_upgrade(move |mut socket| async move {
+        loop {
+            tokio::select! {
+                incoming = socket.recv() => {
+                    match incoming {
+                        Some(Ok(Message::Close(_))) | None | Some(Err(_)) => break,
+                        _ => {}
+                    }
+                }
+                event = rx.recv() => {
+                    match event {
+                        Ok(payload) if payload.market_id == id => {
+                            if let Ok(text) = serde_json::to_string(&payload) {
+                                if socket.send(Message::Text(text)).await.is_err() {
+                                    break;
+                                }
+                            }
+                        }
+                        Ok(_) => {}
+                        Err(broadcast::error::RecvError::Lagged(_)) => {}
+                        Err(broadcast::error::RecvError::Closed) => break,
+                    }
+                }
+            }
+        }
     }))
 }
 
@@ -538,11 +724,13 @@ mod tests {
     use sqlx::postgres::PgPoolOptions;
 
     fn test_state() -> AppState {
+        let (market_events, _) = tokio::sync::broadcast::channel(32);
         AppState {
             pool: PgPoolOptions::new()
                 .connect_lazy("postgres://local:local@localhost:5432/local")
                 .expect("lazy pool should be created"),
             jwt_secret: "abcdefghijklmnopqrstuvwxyz123456".to_string(),
+            market_events,
         }
     }
 
@@ -573,6 +761,7 @@ mod tests {
         let payload = PlaceBetRequest {
             outcome_index: 0,
             amount: 0,
+            side: None,
         };
 
         let result = place_bet(State(state), auth, Path(Uuid::new_v4()), Json(payload)).await;

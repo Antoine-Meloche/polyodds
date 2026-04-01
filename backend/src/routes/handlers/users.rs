@@ -66,7 +66,7 @@ pub async fn get_user_bets(
     let offset = page_offset(query.offset);
 
     let bets = sqlx::query_as::<_, Bet>(
-        "SELECT b.id, b.market_id, b.user_id, b.outcome_index, b.amount, b.created_at
+        "SELECT b.id, b.market_id, b.user_id, b.outcome_index, b.amount, b.side, b.created_at
          FROM bets b
          JOIN markets m ON m.id = b.market_id
          WHERE b.user_id = $1

@@ -25,7 +25,7 @@ test('bets feature: authenticated user can place a bet on a market they did not 
   const placeBetResponsePromise = page.waitForResponse(
     (response) => response.url().includes(`/api/markets/${market.id}/bet`) && response.request().method() === 'POST'
   );
-  await betPanel.getByRole('button', { name: 'Placer un bet' }).click();
+  await betPanel.getByRole('button', { name: "Confirmer l'achat" }).click();
   const placeBetResponse = await placeBetResponsePromise;
   expect(placeBetResponse.ok(), await placeBetResponse.text()).toBeTruthy();
 

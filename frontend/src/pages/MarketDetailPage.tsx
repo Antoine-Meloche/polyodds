@@ -1,7 +1,7 @@
 import { useParams } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { marketsAPI } from '@/api/markets';
 import { useMarketDetail, useMarketHistory } from '@/hooks/useMarkets';
 import { useAuth } from '@/hooks/useAuth';
@@ -17,6 +17,23 @@ export const MarketDetailPage = () => {
   const { data: market, isLoading } = useMarketDetail(id);
   const { data: history } = useMarketHistory(id);
   const [winningOutcomeIndex, setWinningOutcomeIndex] = useState<number>(0);
+
+  useEffect(() => {
+    if (!id) return;
+
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const ws = new WebSocket(`${protocol}//${window.location.host}/api/markets/${id}/ws`);
+
+    ws.onmessage = () => {
+      queryClient.invalidateQueries({ queryKey: ['markets', id] });
+      queryClient.invalidateQueries({ queryKey: ['markets', id, 'history'] });
+      queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
+    };
+
+    return () => {
+      ws.close();
+    };
+  }, [id, queryClient]);
 
   const resolveMarketMutation = useMutation({
     mutationFn: (outcomeIndex: number) => marketsAPI.resolveMarket(id!, outcomeIndex),

@@ -177,11 +177,13 @@ mod tests {
     use sqlx::postgres::PgPoolOptions;
 
     fn test_state() -> AppState {
+        let (market_events, _) = tokio::sync::broadcast::channel(32);
         AppState {
             pool: PgPoolOptions::new()
                 .connect_lazy("postgres://local:local@localhost:5432/local")
                 .expect("lazy pool should be created"),
             jwt_secret: "abcdefghijklmnopqrstuvwxyz123456".to_string(),
+            market_events,
         }
     }
 

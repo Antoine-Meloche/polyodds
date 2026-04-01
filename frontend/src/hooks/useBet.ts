@@ -10,11 +10,13 @@ export const useBet = () => {
       market_id,
       outcome_index,
       amount,
+      side,
     }: {
       market_id: string;
       outcome_index: number;
       amount: number;
-    }) => betsAPI.placeBet(market_id, outcome_index, amount),
+      side: 'buy' | 'sell';
+    }) => betsAPI.placeBet(market_id, outcome_index, amount, side),
     onSuccess: (_data, variables) => {
       // Invalidate related queries
       queryClient.invalidateQueries({ queryKey: ['markets', variables.market_id] });
