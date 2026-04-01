@@ -46,6 +46,10 @@ export const marketsAPI = {
     return res.data;
   },
 
+  deleteMarket: async (id: string): Promise<void> => {
+    await client.delete(`/markets/${id}`);
+  },
+
   resolveMarket: async (id: string, winning_outcome_index: number): Promise<Market> => {
     const payload: ResolveMarketRequest = { winning_outcome_index };
     const res = await client.post(`/markets/${id}/resolve`, payload);

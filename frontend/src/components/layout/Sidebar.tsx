@@ -9,14 +9,14 @@ export const Sidebar = () => {
   const { user, isAuthenticated } = useAuth();
 
   const { data: marketsData } = useQuery({
-    queryKey: ['markets', 'sidebar', 'mine', user?.id],
-    queryFn: () => marketsAPI.fetchMarkets({ limit: 200, offset: 0, sort: 'newest' }),
+    queryKey: ['markets', 'sidebar', 'mine', user?.id, 'open'],
+    queryFn: () => marketsAPI.fetchMarkets({ limit: 200, offset: 0, sort: 'newest', status: 'open' }),
     enabled: !!user?.id,
     staleTime: 60_000,
   });
 
   const myMarkets = (marketsData?.markets || []).filter((market) => market.creator_id === user?.id);
-  const activeOwnMarketsCount = myMarkets.filter((market) => market.status === 'open').length;
+  const activeOwnMarketsCount = myMarkets.length;
 
   const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/');
 
@@ -63,7 +63,7 @@ export const Sidebar = () => {
                   </Link>
                 ))
               ) : (
-                <p className="px-3 py-1.5 text-sm text-muted-foreground">Aucun marché personnel</p>
+                <p className="px-3 py-1.5 text-sm text-muted-foreground">Aucun marché actif</p>
               )}
             </div>
           </div>

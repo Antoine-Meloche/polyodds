@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { marketsAPI } from '@/api/markets';
@@ -14,6 +14,7 @@ import { getMarketStatusLabelFr } from '@/utils/marketStatus';
 
 export const MarketDetailPage = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { data: market, isLoading } = useMarketDetail(id);
@@ -38,16 +39,42 @@ export const MarketDetailPage = () => {
     },
   });
 
+  const deleteMarketMutation = useMutation({
+    mutationFn: () => marketsAPI.deleteMarket(id!),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['markets'] }),
+        queryClient.invalidateQueries({ queryKey: ['auth', 'me'] }),
+      ]);
+      queryClient.removeQueries({ queryKey: ['markets', id] });
+      queryClient.removeQueries({ queryKey: ['markets', id, 'history'] });
+      navigate('/bets');
+    },
+  });
+
   if (isLoading || !market) return <LoadingSpinner />;
 
   const isCreator = !!user && user.id === market.creator_id;
   const canResolveNow = market.status !== 'resolved';
 
   const resolveErrorMessage = getAxiosErrorMessage(resolveMarketMutation.error);
+  const deleteErrorMessage = getAxiosErrorMessage(deleteMarketMutation.error);
 
   const handleResolve = () => {
     if (!canResolveNow || resolveMarketMutation.isPending) return;
     resolveMarketMutation.mutate(winningOutcomeIndex);
+  };
+
+  const handleDeleteMarket = () => {
+    if (!canResolveNow || deleteMarketMutation.isPending) return;
+
+    const confirmed = window.confirm(
+      'Supprimer ce marché et rembourser tous les points engagés ? Cette action est irréversible.',
+    );
+
+    if (!confirmed) return;
+
+    deleteMarketMutation.mutate();
   };
 
   return (
@@ -88,7 +115,7 @@ export const MarketDetailPage = () => {
             <div className="app-panel p-4 space-y-3">
               <h2 className="font-semibold">Options d'administration</h2>
               <p className="text-sm text-muted-foreground">
-                En tant que créateur, vous pouvez clôturer ce marché et sélectionner l'option gagnante.
+                En tant que créateur, vous pouvez clôturer ce marché ou le supprimer pour corriger une erreur. Une suppression rembourse les points engagés et efface le marché.
               </p>
 
               <div className="space-y-2">
@@ -111,13 +138,27 @@ export const MarketDetailPage = () => {
                 <div className="text-destructive text-sm">{resolveErrorMessage}</div>
               )}
 
-              <button
-                onClick={handleResolve}
-                disabled={!canResolveNow || market.status === 'resolved' || resolveMarketMutation.isPending}
-                className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 disabled:opacity-50 font-medium"
-              >
-                {resolveMarketMutation.isPending ? 'Clôture du marché en cours...' : 'Clôturer le marché'}
-              </button>
+              {deleteErrorMessage && (
+                <div className="text-destructive text-sm">{deleteErrorMessage}</div>
+              )}
+
+              <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={handleResolve}
+                  disabled={!canResolveNow || market.status === 'resolved' || resolveMarketMutation.isPending || deleteMarketMutation.isPending}
+                  className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 disabled:opacity-50 font-medium"
+                >
+                  {resolveMarketMutation.isPending ? 'Clôture du marché en cours...' : 'Clôturer le marché'}
+                </button>
+
+                <button
+                  onClick={handleDeleteMarket}
+                  disabled={!canResolveNow || deleteMarketMutation.isPending || resolveMarketMutation.isPending}
+                  className="px-4 py-2 border border-destructive text-destructive rounded-lg hover:bg-destructive/10 disabled:opacity-50 font-medium"
+                >
+                  {deleteMarketMutation.isPending ? 'Suppression...' : 'Supprimer le marché'}
+                </button>
+              </div>
             </div>
           )}
 

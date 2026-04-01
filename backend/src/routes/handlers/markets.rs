@@ -154,6 +154,13 @@ struct MarketRow {
     pools: Vec<i64>,
 }
 
+#[derive(FromRow)]
+struct MarketPositionRow {
+    user_id: Uuid,
+    outcome_index: i32,
+    shares: i64,
+}
+
 fn probabilities_from_pools(pools: &[i64]) -> Vec<f64> {
     let total: i64 = pools.iter().sum();
     pools
@@ -176,6 +183,66 @@ fn quote_bid_price(pools: &[i64], outcome_index: usize, shares_out: i64) -> f64 
     let spread = SPREAD_BPS / 10_000.0;
     let impact = (shares_out.max(1) as f64) / total;
     (base * (1.0 - spread / 2.0 - impact)).max(MIN_PRICE)
+}
+
+async fn refund_market_positions(
+    tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    market_id: Uuid,
+    pools: &[i64],
+) -> AppResult<()> {
+    let positions = sqlx::query_as::<_, MarketPositionRow>(
+        "SELECT user_id, outcome_index, shares
+         FROM market_positions
+         WHERE market_id = $1 AND shares > 0
+         ORDER BY outcome_index ASC, user_id ASC
+         FOR UPDATE",
+    )
+    .bind(market_id)
+    .fetch_all(&mut **tx)
+    .await?;
+
+    for (outcome_index, pool_amount) in pools.iter().copied().enumerate() {
+        if pool_amount <= 0 {
+            continue;
+        }
+
+        let outcome_positions = positions
+            .iter()
+            .filter(|position| position.outcome_index == outcome_index as i32)
+            .collect::<Vec<_>>();
+
+        let total_shares: i64 = outcome_positions.iter().map(|position| position.shares).sum();
+        if total_shares <= 0 {
+            continue;
+        }
+
+        let mut distributed = 0_i64;
+        let last_index = outcome_positions.len().saturating_sub(1);
+
+        for (position_index, position) in outcome_positions.iter().enumerate() {
+            let payout = if position_index == last_index {
+                pool_amount - distributed
+            } else {
+                let amount = (pool_amount * position.shares) / total_shares;
+                distributed += amount;
+                amount
+            };
+
+            if payout > 0 {
+                sqlx::query(
+                    "UPDATE users
+                     SET points = points + $2, updated_at = NOW()
+                     WHERE id = $1",
+                )
+                .bind(position.user_id)
+                .bind(payout)
+                .execute(&mut **tx)
+                .await?;
+            }
+        }
+    }
+
+    Ok(())
 }
 
 pub async fn get_market(
@@ -407,6 +474,48 @@ pub async fn resolve_market(
     broadcast_market_event(&state.market_events, id, KIND_RESOLVED, STATUS_RESOLVED, row.pools);
 
     Ok(Json(resolved))
+}
+
+pub async fn delete_market(
+    State(state): State<AppState>,
+    auth: AuthUser,
+    Path(id): Path<Uuid>,
+) -> AppResult<axum::http::StatusCode> {
+    let mut tx = state.pool.begin().await?;
+
+    let row = sqlx::query_as::<_, MarketRow>(
+        "SELECT m.id, m.title, m.description, m.category_id, m.category_ids, m.creator_id,
+            m.outcomes, m.status, m.winning_outcome_index, m.created_at,
+                m.pools
+         FROM markets m
+         WHERE m.id = $1
+            FOR UPDATE OF m",
+    )
+    .bind(id)
+    .fetch_optional(&mut *tx)
+    .await?
+    .ok_or(AppError::NotFound)?;
+
+    if row.creator_id != Some(auth.user_id) {
+        return Err(AppError::Forbidden);
+    }
+
+    if row.status != STATUS_OPEN {
+        return Err(AppError::BadRequest(
+            "Only open markets can be deleted".to_string(),
+        ));
+    }
+
+    refund_market_positions(&mut tx, id, &row.pools).await?;
+
+    sqlx::query("DELETE FROM markets WHERE id = $1")
+        .bind(id)
+        .execute(&mut *tx)
+        .await?;
+
+    tx.commit().await?;
+
+    Ok(axum::http::StatusCode::NO_CONTENT)
 }
 
 pub async fn market_history(
