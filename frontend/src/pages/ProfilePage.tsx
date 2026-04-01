@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueries } from '@tanstack/react-query';
 import { usersAPI } from '@/api/users';
+import { marketsAPI } from '@/api/markets';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { PointsBadge } from '@/components/shared/PointsBadge';
 
@@ -23,6 +24,23 @@ export const ProfilePage = () => {
         limit: 50,
       }),
     enabled: !!id,
+  });
+
+  const uniqueMarketIds = Array.from(new Set((betsData?.bets || []).map((bet) => bet.market_id)));
+  const marketQueries = useQueries({
+    queries: uniqueMarketIds.map((marketId) => ({
+      queryKey: ['markets', marketId],
+      queryFn: () => marketsAPI.fetchMarket(marketId),
+      staleTime: 60_000,
+    })),
+  });
+
+  const marketTitleById = new Map<string, string>();
+  uniqueMarketIds.forEach((marketId, index) => {
+    const title = marketQueries[index]?.data?.title;
+    if (title) {
+      marketTitleById.set(marketId, title);
+    }
   });
 
   if (userLoading || !user) return <LoadingSpinner />;
@@ -82,7 +100,7 @@ export const ProfilePage = () => {
           {betsData && betsData.bets.length > 0 ? (
             betsData.bets.map((bet) => (
               <div key={bet.id} className="app-panel p-4">
-                <p className="font-medium">Bet: {bet.market_id}</p>
+                <p className="font-medium">Bet: {marketTitleById.get(bet.market_id) || 'Marché'}</p>
                 <p className="text-sm text-muted-foreground">Montant: {bet.amount} points</p>
                 <p className="text-xs text-muted-foreground">Placé le {new Date(bet.created_at).toLocaleDateString('fr-CA')}</p>
               </div>

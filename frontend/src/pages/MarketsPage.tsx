@@ -44,7 +44,7 @@ export const MarketsPage = () => {
         </div>
       </div>
 
-      <MarketFilters filters={{ ...filters, search: undefined }} onFiltersChange={(newFilters) => handleFilterChange({ ...newFilters, search: filters.search })} />
+      <MarketFilters filters={filters} onFiltersChange={handleFilterChange} showSearch={false} />
 
       <MarketList markets={data?.markets || []} isLoading={isLoading} />
 

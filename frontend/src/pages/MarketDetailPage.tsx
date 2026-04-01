@@ -132,12 +132,10 @@ export const MarketDetailPage = () => {
           )}
 
           {/* Probability Chart */}
-          {history && history.length > 0 && (
-            <div className="app-panel p-4">
-              <h2 className="font-semibold mb-3">Historique des probabilités</h2>
-              <OddsChart history={history} outcomes={market.outcomes} />
-            </div>
-          )}
+          <div className="app-panel p-4">
+            <h2 className="font-semibold mb-3">Historique des probabilités</h2>
+            <OddsChart history={history || []} outcomes={market.outcomes} />
+          </div>
         </div>
 
         {/* Bet Panel */}

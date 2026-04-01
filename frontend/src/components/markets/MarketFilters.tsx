@@ -11,9 +11,11 @@ export interface MarketFiltersState {
 export const MarketFilters = ({
   filters,
   onFiltersChange,
+  showSearch = true,
 }: {
   filters: MarketFiltersState;
   onFiltersChange: (filters: MarketFiltersState) => void;
+  showSearch?: boolean;
 }) => {
   const { data: categoriesData } = useQuery({
     queryKey: ['categories'],
@@ -69,18 +71,20 @@ export const MarketFilters = ({
         <option value="volume">Volume</option>
       </select>
 
-      <input
-        type="text"
-        placeholder="Rechercher..."
-        value={filters.search || ''}
-        onChange={(e) =>
-          onFiltersChange({
-            ...filters,
-            search: e.target.value || undefined,
-          })
-        }
-        className="px-3 py-2 border border-primary/25 rounded-lg text-sm flex-1 min-w-[200px]"
-      />
+      {showSearch && (
+        <input
+          type="text"
+          placeholder="Rechercher..."
+          value={filters.search || ''}
+          onChange={(e) =>
+            onFiltersChange({
+              ...filters,
+              search: e.target.value || undefined,
+            })
+          }
+          className="px-3 py-2 border border-primary/25 rounded-lg text-sm flex-1 min-w-[200px]"
+        />
+      )}
     </div>
   );
 };
