@@ -43,26 +43,6 @@ export async function firstCategoryId(request: APIRequestContext): Promise<strin
   return firstCategory.id as string;
 }
 
-export async function createCommunityViaApi(
-  request: APIRequestContext,
-  token: string,
-  data?: { name?: string; description?: string; is_private?: boolean }
-) {
-  const name = data?.name ?? `Community ${uniqueSuffix()}`;
-  const description = data?.description ?? 'Community created by feature tests';
-  const is_private = data?.is_private ?? false;
-
-  const response = await request.post('/api/communities', {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    data: { name, description, is_private },
-  });
-
-  expect(response.ok()).toBeTruthy();
-  return response.json();
-}
-
 export async function createMarketViaApi(
   request: APIRequestContext,
   token: string,
@@ -70,7 +50,6 @@ export async function createMarketViaApi(
     title?: string;
     description?: string;
     category_id?: string;
-    community_id?: string | null;
     outcomes?: string[];
   }
 ) {
@@ -86,7 +65,6 @@ export async function createMarketViaApi(
       title,
       description,
       category_id,
-      community_id: data?.community_id ?? null,
       outcomes: data?.outcomes ?? ['Yes', 'No'],
     },
   });

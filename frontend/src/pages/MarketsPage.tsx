@@ -24,10 +24,27 @@ export const MarketsPage = () => {
   return (
     <div className="space-y-6">
       <div className="app-panel p-5">
-        <h1 className="text-3xl font-bold text-primary">Bets</h1>
+        <div className="flex flex-col gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-primary">Tous les bets</h1>
+            <p className="text-sm text-muted-foreground mt-1">Recherchez et filtrez tous les marchés depuis cette page.</p>
+          </div>
+          <input
+            type="text"
+            placeholder="Rechercher un bet..."
+            value={filters.search || ''}
+            onChange={(e) =>
+              handleFilterChange({
+                ...filters,
+                search: e.target.value || undefined,
+              })
+            }
+            className="w-full max-w-xl px-3 py-2 border border-primary/25 rounded-lg text-sm bg-background"
+          />
+        </div>
       </div>
 
-      <MarketFilters filters={filters} onFiltersChange={handleFilterChange} />
+      <MarketFilters filters={{ ...filters, search: undefined }} onFiltersChange={(newFilters) => handleFilterChange({ ...newFilters, search: filters.search })} />
 
       <MarketList markets={data?.markets || []} isLoading={isLoading} />
 

@@ -29,14 +29,7 @@ use sqlx::FromRow;
 use tokio::sync::broadcast;
 use uuid::Uuid;
 
-use super::{
-    ensure_community_member,
-    is_community_admin_tx,
-    is_community_member,
-    is_community_member_tx,
-    page_limit,
-    page_offset,
-};
+use super::{page_limit, page_offset};
 
 const INITIAL_POOL_POINTS_PER_OUTCOME: i64 = 500;
 const SPREAD_BPS: f64 = 150.0;
@@ -56,23 +49,19 @@ pub async fn list_markets(
     };
 
     let sql = format!(
-        "SELECT m.id, m.title, m.description, m.category_id, m.community_id, m.creator_id, m.outcomes, m.status,
+                "SELECT m.id, m.title, m.description, m.category_id, m.creator_id, m.outcomes, m.status,
             m.winning_outcome_index, m.created_at
          FROM markets m
-         LEFT JOIN communities c ON c.id = m.community_id
          WHERE ($1::uuid IS NULL OR m.category_id = $1)
-           AND ($2::uuid IS NULL OR m.community_id = $2)
-           AND ($3::text IS NULL OR m.status = $3)
-           AND ($4::text IS NULL OR m.title ILIKE '%' || $4 || '%')
-           AND (c.id IS NULL OR c.is_private = FALSE)
+                     AND ($2::text IS NULL OR m.status = $2)
+                     AND ($3::text IS NULL OR m.title ILIKE '%' || $3 || '%')
          ORDER BY {}
-         LIMIT $5 OFFSET $6",
+                 LIMIT $4 OFFSET $5",
         order_clause
     );
 
     let markets = sqlx::query_as::<_, Market>(&sql)
         .bind(query.category_id)
-        .bind(query.community_id)
         .bind(query.status.clone())
         .bind(query.search.clone())
         .bind(limit)
@@ -83,15 +72,11 @@ pub async fn list_markets(
     let (total,) = sqlx::query_as::<_, (i64,)>(
         "SELECT COUNT(*)
          FROM markets m
-         LEFT JOIN communities c ON c.id = m.community_id
          WHERE ($1::uuid IS NULL OR m.category_id = $1)
-           AND ($2::uuid IS NULL OR m.community_id = $2)
-           AND ($3::text IS NULL OR m.status = $3)
-           AND ($4::text IS NULL OR m.title ILIKE '%' || $4 || '%')
-           AND (c.id IS NULL OR c.is_private = FALSE)",
+                     AND ($2::text IS NULL OR m.status = $2)
+                     AND ($3::text IS NULL OR m.title ILIKE '%' || $3 || '%')",
     )
     .bind(query.category_id)
-    .bind(query.community_id)
     .bind(query.status)
     .bind(query.search)
     .fetch_one(&state.pool)
@@ -106,14 +91,12 @@ struct MarketRow {
     title: String,
     description: String,
     category_id: Uuid,
-    community_id: Option<Uuid>,
     creator_id: Uuid,
     outcomes: Vec<String>,
     status: String,
     winning_outcome_index: Option<i32>,
     created_at: chrono::DateTime<chrono::Utc>,
     pools: Vec<i64>,
-    community_private: Option<bool>,
 }
 
 fn probabilities_from_pools(pools: &[i64]) -> Vec<f64> {
@@ -148,25 +131,16 @@ pub async fn get_market(
     let maybe_auth_user = maybe_auth.0;
 
     let row = sqlx::query_as::<_, MarketRow>(
-        "SELECT m.id, m.title, m.description, m.category_id, m.community_id, m.creator_id,
+        "SELECT m.id, m.title, m.description, m.category_id, m.creator_id,
             m.outcomes, m.status, m.winning_outcome_index, m.created_at,
-                m.pools, c.is_private AS community_private
+                m.pools
          FROM markets m
-         LEFT JOIN communities c ON c.id = m.community_id
          WHERE m.id = $1",
     )
     .bind(id)
     .fetch_optional(&state.pool)
     .await?
     .ok_or(AppError::NotFound)?;
-
-    if row.community_private.unwrap_or(false) {
-        let auth = maybe_auth_user.as_ref().ok_or(AppError::Unauthorized)?;
-        let is_member = is_community_member(&state, auth.user_id, row.community_id.unwrap()).await?;
-        if !is_member {
-            return Err(AppError::Forbidden);
-        }
-    }
 
     let total_volume: i64 = row.pools.iter().sum();
     let pools = row
@@ -213,7 +187,6 @@ pub async fn get_market(
         title: row.title,
         description: row.description,
         category_id: row.category_id,
-        community_id: row.community_id,
         creator_id: row.creator_id,
         outcomes: row.outcomes,
         status: row.status,
@@ -238,25 +211,17 @@ pub async fn create_market(
         return Err(AppError::Validation("Market needs at least two outcomes".to_string()));
     }
 
-    if let Some(community_id) = payload.community_id {
-        let allowed = is_community_member(&state, auth.user_id, community_id).await?;
-        if !allowed {
-            return Err(AppError::Forbidden);
-        }
-    }
-
     let pools = vec![INITIAL_POOL_POINTS_PER_OUTCOME; payload.outcomes.len()];
 
     let market = sqlx::query_as::<_, Market>(
-        "INSERT INTO markets (title, description, category_id, community_id, creator_id, outcomes, status, pools)
-         VALUES ($1, $2, $3, $4, $5, $6, 'open', $7)
-         RETURNING id, title, description, category_id, community_id, creator_id, outcomes, status,
+        "INSERT INTO markets (title, description, category_id, creator_id, outcomes, status, pools)
+         VALUES ($1, $2, $3, $4, $5, 'open', $6)
+         RETURNING id, title, description, category_id, creator_id, outcomes, status,
                    winning_outcome_index, created_at",
     )
     .bind(payload.title.trim())
     .bind(payload.description.trim())
     .bind(payload.category_id)
-    .bind(payload.community_id)
     .bind(auth.user_id)
     .bind(payload.outcomes)
     .bind(pools)
@@ -273,7 +238,7 @@ pub async fn update_market(
     Json(payload): Json<UpdateMarketRequest>,
 ) -> AppResult<Json<Market>> {
     let market = sqlx::query_as::<_, Market>(
-        "SELECT id, title, description, category_id, community_id, creator_id, outcomes, status,
+        "SELECT id, title, description, category_id, creator_id, outcomes, status,
                 winning_outcome_index, created_at
          FROM markets WHERE id = $1",
     )
@@ -295,7 +260,7 @@ pub async fn update_market(
              description = COALESCE($3, description),
              updated_at = NOW()
          WHERE id = $1
-         RETURNING id, title, description, category_id, community_id, creator_id, outcomes, status,
+         RETURNING id, title, description, category_id, creator_id, outcomes, status,
                    winning_outcome_index, created_at",
     )
     .bind(id)
@@ -316,11 +281,10 @@ pub async fn resolve_market(
     let mut tx = state.pool.begin().await?;
 
     let row = sqlx::query_as::<_, MarketRow>(
-        "SELECT m.id, m.title, m.description, m.category_id, m.community_id, m.creator_id,
+        "SELECT m.id, m.title, m.description, m.category_id, m.creator_id,
             m.outcomes, m.status, m.winning_outcome_index, m.created_at,
-                m.pools, c.is_private AS community_private
+                m.pools
          FROM markets m
-         LEFT JOIN communities c ON c.id = m.community_id
          WHERE m.id = $1
             FOR UPDATE OF m",
     )
@@ -329,11 +293,7 @@ pub async fn resolve_market(
     .await?
     .ok_or(AppError::NotFound)?;
 
-    let mut can_resolve = row.creator_id == auth.user_id;
-    if let Some(community_id) = row.community_id {
-        can_resolve = can_resolve || is_community_admin_tx(&mut tx, auth.user_id, community_id).await?;
-    }
-    if !can_resolve {
+    if row.creator_id != auth.user_id {
         return Err(AppError::Forbidden);
     }
     if row.status == "resolved" {
@@ -392,7 +352,7 @@ pub async fn resolve_market(
     });
 
     let resolved = sqlx::query_as::<_, Market>(
-        "SELECT id, title, description, category_id, community_id, creator_id, outcomes, status,
+        "SELECT id, title, description, category_id, creator_id, outcomes, status,
                 winning_outcome_index, created_at
          FROM markets WHERE id = $1",
     )
@@ -405,25 +365,14 @@ pub async fn resolve_market(
 
 pub async fn market_history(
     State(state): State<AppState>,
-    maybe_auth: MaybeAuthUser,
+    _maybe_auth: MaybeAuthUser,
     Path(id): Path<Uuid>,
 ) -> AppResult<Json<MarketHistoryResponse>> {
-    let market = sqlx::query_as::<_, (Option<Uuid>, Option<bool>)>(
-        "SELECT m.community_id, c.is_private
-         FROM markets m
-         LEFT JOIN communities c ON c.id = m.community_id
-         WHERE m.id = $1",
-    )
-    .bind(id)
-    .fetch_optional(&state.pool)
-    .await?
-    .ok_or(AppError::NotFound)?;
-
-    if market.1.unwrap_or(false) {
-        let auth = maybe_auth.0.ok_or(AppError::Unauthorized)?;
-        let community_id = market.0.ok_or(AppError::Forbidden)?;
-        ensure_community_member(&state, auth.user_id, community_id).await?;
-    }
+    let _ = sqlx::query_as::<_, (Uuid,)>("SELECT id FROM markets WHERE id = $1")
+        .bind(id)
+        .fetch_optional(&state.pool)
+        .await?
+        .ok_or(AppError::NotFound)?;
 
     let history = sqlx::query_as::<_, ProbabilitySnapshot>(
         "SELECT recorded_at, probabilities
@@ -475,11 +424,10 @@ pub async fn place_bet(
     let mut tx = state.pool.begin().await?;
 
     let row = sqlx::query_as::<_, MarketRow>(
-        "SELECT m.id, m.title, m.description, m.category_id, m.community_id, m.creator_id,
+        "SELECT m.id, m.title, m.description, m.category_id, m.creator_id,
             m.outcomes, m.status, m.winning_outcome_index, m.created_at,
-                m.pools, c.is_private AS community_private
+                m.pools
          FROM markets m
-         LEFT JOIN communities c ON c.id = m.community_id
          WHERE m.id = $1
             FOR UPDATE OF m",
     )
@@ -499,13 +447,6 @@ pub async fn place_bet(
     }
     if payload.outcome_index < 0 || payload.outcome_index as usize >= row.outcomes.len() {
         return Err(AppError::Validation("Invalid outcome_index".to_string()));
-    }
-
-    if let Some(community_id) = row.community_id {
-        let is_member = is_community_member_tx(&mut tx, auth.user_id, community_id).await?;
-        if !is_member {
-            return Err(AppError::Forbidden);
-        }
     }
 
     let (points,) = sqlx::query_as::<_, (i64,)>("SELECT points FROM users WHERE id = $1 FOR UPDATE")
@@ -667,26 +608,15 @@ pub async fn place_bet(
 
 pub async fn market_ws(
     State(state): State<AppState>,
-    maybe_auth: MaybeAuthUser,
+    _maybe_auth: MaybeAuthUser,
     Path(id): Path<Uuid>,
     ws: WebSocketUpgrade,
 ) -> AppResult<impl IntoResponse> {
-    let market = sqlx::query_as::<_, (Option<Uuid>, Option<bool>)>(
-        "SELECT m.community_id, c.is_private
-         FROM markets m
-         LEFT JOIN communities c ON c.id = m.community_id
-         WHERE m.id = $1",
-    )
-    .bind(id)
-    .fetch_optional(&state.pool)
-    .await?
-    .ok_or(AppError::NotFound)?;
-
-    if market.1.unwrap_or(false) {
-        let auth = maybe_auth.0.ok_or(AppError::Unauthorized)?;
-        let community_id = market.0.ok_or(AppError::Forbidden)?;
-        ensure_community_member(&state, auth.user_id, community_id).await?;
-    }
+    let _ = sqlx::query_as::<_, (Uuid,)>("SELECT id FROM markets WHERE id = $1")
+        .bind(id)
+        .fetch_optional(&state.pool)
+        .await?
+        .ok_or(AppError::NotFound)?;
 
     let mut rx = state.market_events.subscribe();
     Ok(ws.on_upgrade(move |mut socket| async move {
@@ -744,7 +674,6 @@ mod tests {
             title: "Will it rain?".to_string(),
             description: "Weather market".to_string(),
             category_id: Uuid::new_v4(),
-            community_id: None,
             outcomes: vec!["Yes".to_string()],
         };
 

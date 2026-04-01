@@ -4,9 +4,9 @@ pub mod error;
 pub mod routes;
 pub mod state;
 
-use axum::{routing::{delete, get, post}, Router};
+use axum::{routing::{get, post}, Router};
 use config::AppConfig;
-use routes::handlers::{auth as auth_handlers, categories, communities, markets, users};
+use routes::handlers::{auth as auth_handlers, categories, markets, users};
 use sqlx::postgres::PgPoolOptions;
 use state::AppState;
 use std::time::Duration;
@@ -47,18 +47,6 @@ pub async fn build_app(config: AppConfig) -> anyhow::Result<Router> {
         .route("/api/markets/:id/ws", get(markets::market_ws))
         .route("/api/markets/:id/bets", get(markets::market_bets_for_me))
         .route("/api/markets/:id/bet", post(markets::place_bet))
-        .route("/api/communities", get(communities::list_communities).post(communities::create_community))
-        .route(
-            "/api/communities/:id",
-            get(communities::get_community)
-                .patch(communities::update_community)
-                .delete(communities::delete_community),
-        )
-        .route("/api/communities/:id/join", post(communities::join_community))
-        .route("/api/communities/:id/leave", delete(communities::leave_community))
-        .route("/api/communities/:id/members", get(communities::community_members))
-        .route("/api/communities/:id/invite", post(communities::invite_member))
-        .route("/api/communities/:id/markets", get(communities::community_markets))
         .layer(
             CorsLayer::new()
                 .allow_origin([config.frontend_origin.parse()?])

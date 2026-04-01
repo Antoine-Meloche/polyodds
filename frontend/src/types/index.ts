@@ -7,16 +7,6 @@ export type { CategoriesResponse } from './generated/categories/CategoriesRespon
 export type { Category } from './generated/categories/Category';
 export type { CategoryCreateRequest } from './generated/categories/CategoryCreateRequest';
 
-export type { Community } from './generated/communities/Community';
-export type { CommunityDetailResponse } from './generated/communities/CommunityDetailResponse';
-export type { CommunityListResponse } from './generated/communities/CommunityListResponse';
-export type { CommunityMember } from './generated/communities/CommunityMember';
-export type { CommunityMembersResponse } from './generated/communities/CommunityMembersResponse';
-export type { CreateCommunityRequest } from './generated/communities/CreateCommunityRequest';
-export type { InviteMemberRequest } from './generated/communities/InviteMemberRequest';
-export type { RoleResponse } from './generated/communities/RoleResponse';
-export type { UpdateCommunityRequest } from './generated/communities/UpdateCommunityRequest';
-
 export type { Bet } from './generated/markets/Bet';
 export type { BetResponse } from './generated/markets/BetResponse';
 export type { CreateMarketRequest } from './generated/markets/CreateMarketRequest';

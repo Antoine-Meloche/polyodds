@@ -3,7 +3,6 @@ import { marketsAPI } from '@/api/markets';
 
 interface UseMarketsParams {
   category_id?: string;
-  community_id?: string;
   status?: 'open' | 'resolved';
   search?: string;
   sort?: 'volume' | 'newest';

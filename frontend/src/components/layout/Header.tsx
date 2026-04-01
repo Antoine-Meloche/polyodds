@@ -14,14 +14,6 @@ export const Header = () => {
           <span>PolyOdds</span>
         </Link>
 
-        <div className="flex-1 px-8">
-          <input
-            type="text"
-            placeholder="Rechercher des bets..."
-            className="w-full max-w-md px-3 py-2 border border-primary/20 rounded-lg text-sm bg-card/95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
-          />
-        </div>
-
         <div className="flex items-center gap-4">
           {isAuthenticated && user && (
             <>

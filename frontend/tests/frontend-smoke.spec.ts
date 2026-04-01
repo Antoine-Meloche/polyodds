@@ -23,7 +23,6 @@ async function expectNoRuntimeErrors(page: import('@playwright/test').Page, path
 test('public pages render without runtime errors', async ({ page }) => {
   await expectNoRuntimeErrors(page, '/');
   await expectNoRuntimeErrors(page, '/bets');
-  await expectNoRuntimeErrors(page, '/communities');
   await expectNoRuntimeErrors(page, '/leaderboard');
   await expectNoRuntimeErrors(page, '/login');
   await expectNoRuntimeErrors(page, '/register');

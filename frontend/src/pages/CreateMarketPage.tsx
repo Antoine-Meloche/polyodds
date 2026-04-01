@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { categoriesAPI } from '@/api/categories';
 import { marketsAPI } from '@/api/markets';
-import { communitiesAPI } from '@/api/communities';
 import { useAuth } from '@/hooks/useAuth';
 
 export const CreateMarketPage = () => {
@@ -13,17 +12,11 @@ export const CreateMarketPage = () => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [categoryId, setCategoryId] = useState('');
-  const [communityId, setCommunityId] = useState('');
   const [outcomes, setOutcomes] = useState(['Yes', 'No']);
 
   const { data: categories } = useQuery({
     queryKey: ['categories'],
     queryFn: () => categoriesAPI.fetchCategories(),
-  });
-
-  const { data: communities } = useQuery({
-    queryKey: ['communities', { limit: 100 }],
-    queryFn: () => communitiesAPI.fetchCommunities({ limit: 100 }),
   });
 
   const createMutation = useMutation({
@@ -32,7 +25,6 @@ export const CreateMarketPage = () => {
         title,
         description,
         category_id: categoryId,
-        community_id: communityId || null,
         outcomes,
       }),
     onSuccess: (market) => {
@@ -114,23 +106,6 @@ export const CreateMarketPage = () => {
             {categories?.categories.map((cat) => (
               <option key={cat.id} value={cat.id}>
                 {cat.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Community */}
-        <div>
-          <label className="block text-sm font-medium mb-2">Communauté (optionnel)</label>
-          <select
-            value={communityId}
-            onChange={(e) => setCommunityId(e.target.value)}
-            className="w-full px-3 py-2 border rounded-lg"
-          >
-            <option value="">Pas de communauté</option>
-            {communities?.communities.map((com) => (
-              <option key={com.id} value={com.id}>
-                {com.name}
               </option>
             ))}
           </select>
