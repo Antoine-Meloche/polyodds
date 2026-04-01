@@ -84,11 +84,29 @@ pub async fn list_markets(
         _ => "m.created_at DESC",
     };
 
+    let category_filter: Option<Vec<Uuid>> = if let Some(raw_category_ids) = query.category_ids.as_deref() {
+        let parsed = raw_category_ids
+            .split(',')
+            .map(str::trim)
+            .filter(|value| !value.is_empty())
+            .map(Uuid::parse_str)
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(|_| AppError::Validation("Invalid category_ids query parameter".to_string()))?;
+
+        if parsed.is_empty() {
+            None
+        } else {
+            Some(parsed)
+        }
+    } else {
+        query.category_id.map(|id| vec![id])
+    };
+
     let sql = format!(
-                "SELECT m.id, m.title, m.description, m.category_id, m.creator_id, m.outcomes, m.status,
+                "SELECT m.id, m.title, m.description, m.category_id, m.category_ids, m.creator_id, m.outcomes, m.status,
             m.winning_outcome_index, m.created_at
          FROM markets m
-         WHERE ($1::uuid IS NULL OR m.category_id = $1)
+         WHERE ($1::uuid[] IS NULL OR m.category_ids && $1)
                      AND ($2::text IS NULL OR m.status = $2)
                      AND ($3::text IS NULL OR m.title ILIKE '%' || $3 || '%')
          ORDER BY {}
@@ -97,7 +115,7 @@ pub async fn list_markets(
     );
 
     let markets = sqlx::query_as::<_, Market>(&sql)
-        .bind(query.category_id)
+        .bind(category_filter.clone())
         .bind(query.status.clone())
         .bind(query.search.clone())
         .bind(limit)
@@ -108,11 +126,11 @@ pub async fn list_markets(
     let (total,) = sqlx::query_as::<_, (i64,)>(
         "SELECT COUNT(*)
          FROM markets m
-         WHERE ($1::uuid IS NULL OR m.category_id = $1)
+         WHERE ($1::uuid[] IS NULL OR m.category_ids && $1)
                      AND ($2::text IS NULL OR m.status = $2)
                      AND ($3::text IS NULL OR m.title ILIKE '%' || $3 || '%')",
     )
-    .bind(query.category_id)
+    .bind(category_filter)
     .bind(query.status)
     .bind(query.search)
     .fetch_one(&state.pool)
@@ -127,6 +145,7 @@ struct MarketRow {
     title: String,
     description: String,
     category_id: Uuid,
+    category_ids: Vec<Uuid>,
     creator_id: Uuid,
     outcomes: Vec<String>,
     status: String,
@@ -167,7 +186,7 @@ pub async fn get_market(
     let maybe_auth_user = maybe_auth.0;
 
     let row = sqlx::query_as::<_, MarketRow>(
-        "SELECT m.id, m.title, m.description, m.category_id, m.creator_id,
+        "SELECT m.id, m.title, m.description, m.category_id, m.category_ids, m.creator_id,
             m.outcomes, m.status, m.winning_outcome_index, m.created_at,
                 m.pools
          FROM markets m
@@ -223,6 +242,7 @@ pub async fn get_market(
         title: row.title,
         description: row.description,
         category_id: row.category_id,
+        category_ids: row.category_ids,
         creator_id: row.creator_id,
         outcomes: row.outcomes,
         status: row.status,
@@ -243,21 +263,27 @@ pub async fn create_market(
     auth: AuthUser,
     Json(payload): Json<CreateMarketRequest>,
 ) -> AppResult<Json<Market>> {
+    if payload.category_ids.is_empty() {
+        return Err(AppError::Validation("Market needs at least one category".to_string()));
+    }
+
     if payload.outcomes.len() < 2 {
         return Err(AppError::Validation("Market needs at least two outcomes".to_string()));
     }
 
     let pools = vec![INITIAL_POOL_POINTS_PER_OUTCOME; payload.outcomes.len()];
+    let primary_category_id = payload.category_ids[0];
 
     let market = sqlx::query_as::<_, Market>(
-        "INSERT INTO markets (title, description, category_id, creator_id, outcomes, status, pools)
-         VALUES ($1, $2, $3, $4, $5, 'open', $6)
-         RETURNING id, title, description, category_id, creator_id, outcomes, status,
+        "INSERT INTO markets (title, description, category_id, category_ids, creator_id, outcomes, status, pools)
+         VALUES ($1, $2, $3, $4, $5, $6, 'open', $7)
+         RETURNING id, title, description, category_id, category_ids, creator_id, outcomes, status,
                    winning_outcome_index, created_at",
     )
     .bind(payload.title.trim())
     .bind(payload.description.trim())
-    .bind(payload.category_id)
+    .bind(primary_category_id)
+    .bind(payload.category_ids)
     .bind(auth.user_id)
     .bind(payload.outcomes)
     .bind(pools.clone())
@@ -276,7 +302,7 @@ pub async fn update_market(
     Json(payload): Json<UpdateMarketRequest>,
 ) -> AppResult<Json<Market>> {
     let market = sqlx::query_as::<_, Market>(
-        "SELECT id, title, description, category_id, creator_id, outcomes, status,
+        "SELECT id, title, description, category_id, category_ids, creator_id, outcomes, status,
                 winning_outcome_index, created_at
          FROM markets WHERE id = $1",
     )
@@ -298,7 +324,7 @@ pub async fn update_market(
              description = COALESCE($3, description),
              updated_at = NOW()
          WHERE id = $1
-         RETURNING id, title, description, category_id, creator_id, outcomes, status,
+         RETURNING id, title, description, category_id, category_ids, creator_id, outcomes, status,
                    winning_outcome_index, created_at",
     )
     .bind(id)
@@ -319,7 +345,7 @@ pub async fn resolve_market(
     let mut tx = state.pool.begin().await?;
 
     let row = sqlx::query_as::<_, MarketRow>(
-        "SELECT m.id, m.title, m.description, m.category_id, m.creator_id,
+        "SELECT m.id, m.title, m.description, m.category_id, m.category_ids, m.creator_id,
             m.outcomes, m.status, m.winning_outcome_index, m.created_at,
                 m.pools
          FROM markets m
@@ -350,7 +376,7 @@ pub async fn resolve_market(
         "UPDATE markets
             SET status = $3, winning_outcome_index = $2, updated_at = NOW()
          WHERE id = $1
-         RETURNING id, title, description, category_id, creator_id, outcomes, status,
+         RETURNING id, title, description, category_id, category_ids, creator_id, outcomes, status,
                    winning_outcome_index, created_at",
     )
     .bind(id)
@@ -444,7 +470,7 @@ pub async fn place_bet(
     let mut tx = state.pool.begin().await?;
 
     let row = sqlx::query_as::<_, MarketRow>(
-        "SELECT m.id, m.title, m.description, m.category_id, m.creator_id,
+        "SELECT m.id, m.title, m.description, m.category_id, m.category_ids, m.creator_id,
             m.outcomes, m.status, m.winning_outcome_index, m.created_at,
                 m.pools
          FROM markets m
@@ -704,7 +730,7 @@ mod tests {
         let payload = CreateMarketRequest {
             title: "Will it rain?".to_string(),
             description: "Weather market".to_string(),
-            category_id: Uuid::new_v4(),
+            category_ids: vec![Uuid::new_v4()],
             outcomes: vec!["Yes".to_string()],
         };
 

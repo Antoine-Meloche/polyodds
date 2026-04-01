@@ -12,4 +12,8 @@ export const categoriesAPI = {
     const res = await client.post('/categories', payload);
     return res.data;
   },
+
+  deleteCategory: async (id: string): Promise<void> => {
+    await client.delete(`/categories/${id}`);
+  },
 };

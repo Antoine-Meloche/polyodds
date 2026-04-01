@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import type { Market } from '@/types';
+import { getMarketStatusLabelFr } from '@/utils/marketStatus';
 import { OutcomeBadge } from './OutcomeBadge';
 
 interface MarketCardProps {
@@ -22,7 +23,7 @@ export const MarketCard = ({ market }: MarketCardProps) => {
           </div>
 
           <div className="flex items-center justify-between pt-2 border-t border-primary/15 text-xs text-muted-foreground">
-            <span>Status: {market.status}</span>
+            <span>Statut: {getMarketStatusLabelFr(market.status)}</span>
           </div>
         </div>
       </div>

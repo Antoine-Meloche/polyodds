@@ -12,7 +12,7 @@ import type {
 } from '@/types';
 
 interface FetchMarketsParams {
-  category_id?: string;
+  category_ids?: string[];
   status?: 'open' | 'resolved';
   search?: string;
   sort?: 'volume' | 'newest';
@@ -22,7 +22,12 @@ interface FetchMarketsParams {
 
 export const marketsAPI = {
   fetchMarkets: async (params: FetchMarketsParams): Promise<MarketsResponse> => {
-    const res = await client.get('/markets', { params });
+    const res = await client.get('/markets', {
+      params: {
+        ...params,
+        category_ids: params.category_ids?.length ? params.category_ids.join(',') : undefined,
+      },
+    });
     return res.data;
   },
 

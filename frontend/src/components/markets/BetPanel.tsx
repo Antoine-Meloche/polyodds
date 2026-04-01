@@ -3,6 +3,7 @@ import type { MarketWithPools } from '@/types';
 import { useBet } from '@/hooks/useBet';
 import { useAuth } from '@/hooks/useAuth';
 import { formatProbability } from '@/utils/odds';
+import { getMarketStatusLabelFr } from '@/utils/marketStatus';
 
 export const BetPanel = ({ market }: { market: MarketWithPools }) => {
   const [amount, setAmount] = useState<number>(10);
@@ -15,7 +16,7 @@ export const BetPanel = ({ market }: { market: MarketWithPools }) => {
   if (market.status !== 'open') {
     return (
       <div className="app-panel p-4">
-        <p className="text-center text-muted-foreground">Ce marché est {market.status}</p>
+        <p className="text-center text-muted-foreground">Ce marché est {getMarketStatusLabelFr(market.status)}</p>
       </div>
     );
   }

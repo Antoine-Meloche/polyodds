@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { marketsAPI } from '@/api/markets';
 
 interface UseMarketsParams {
-  category_id?: string;
+  category_ids?: string[];
   status?: 'open' | 'resolved';
   search?: string;
   sort?: 'volume' | 'newest';

@@ -10,6 +10,7 @@ import { OutcomeBadge } from '@/components/markets/OutcomeBadge';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { getWsUrl } from '@/utils/ws';
 import { getAxiosErrorMessage } from '@/utils/errors';
+import { getMarketStatusLabelFr } from '@/utils/marketStatus';
 
 export const MarketDetailPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -68,7 +69,7 @@ export const MarketDetailPage = () => {
           <div className="app-panel p-4">
             <h2 className="font-semibold mb-3">Informations du marché</h2>
             <div className="space-y-2 text-sm">
-              <p>Statut: <span className="font-medium">{market.status}</span></p>
+              <p>Statut: <span className="font-medium">{getMarketStatusLabelFr(market.status)}</span></p>
               <p>Volume total: <span className="font-medium">{market.total_volume}</span></p>
             </div>
           </div>

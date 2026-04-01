@@ -11,6 +11,7 @@ pub struct Market {
     pub title: String,
     pub description: String,
     pub category_id: Uuid,
+    pub category_ids: Vec<Uuid>,
     pub creator_id: Uuid,
     pub outcomes: Vec<String>,
     #[ts(type = "\"open\" | \"resolved\"")]
@@ -88,6 +89,7 @@ pub struct MarketHistoryResponse {
 #[derive(Debug, Deserialize)]
 pub struct MarketListQuery {
     pub category_id: Option<Uuid>,
+    pub category_ids: Option<String>,
     pub status: Option<String>,
     pub search: Option<String>,
     pub sort: Option<String>,
@@ -100,7 +102,7 @@ pub struct MarketListQuery {
 pub struct CreateMarketRequest {
     pub title: String,
     pub description: String,
-    pub category_id: Uuid,
+    pub category_ids: Vec<Uuid>,
     pub outcomes: Vec<String>,
 }
 

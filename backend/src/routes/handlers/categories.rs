@@ -3,7 +3,8 @@ use crate::{
     routes::models::categories::{CategoriesResponse, Category, CategoryCreateRequest},
     state::AppState,
 };
-use axum::{extract::State, Json};
+use axum::{extract::{Path, State}, Json};
+use uuid::Uuid;
 
 pub async fn list_categories(State(state): State<AppState>) -> AppResult<Json<CategoriesResponse>> {
     let categories = sqlx::query_as::<_, Category>(
@@ -36,4 +37,42 @@ pub async fn create_category(
     })?;
 
     Ok(Json(category))
+}
+
+pub async fn delete_category(
+    State(state): State<AppState>,
+    Path(id): Path<Uuid>,
+) -> AppResult<Json<serde_json::Value>> {
+    let (exists,): (bool,) = sqlx::query_as("SELECT EXISTS(SELECT 1 FROM categories WHERE id = $1)")
+        .bind(id)
+        .fetch_one(&state.pool)
+        .await?;
+
+    if !exists {
+        return Err(AppError::NotFound);
+    }
+
+    let (is_used,): (bool,) = sqlx::query_as(
+        "SELECT EXISTS(
+           SELECT 1
+           FROM markets
+           WHERE category_id = $1 OR $1 = ANY(category_ids)
+         )",
+    )
+    .bind(id)
+    .fetch_one(&state.pool)
+    .await?;
+
+    if is_used {
+        return Err(AppError::BadRequest(
+            "Cannot delete category because it is used by one or more markets".to_string(),
+        ));
+    }
+
+    sqlx::query("DELETE FROM categories WHERE id = $1")
+        .bind(id)
+        .execute(&state.pool)
+        .await?;
+
+    Ok(Json(serde_json::json!({ "deleted": true })))
 }

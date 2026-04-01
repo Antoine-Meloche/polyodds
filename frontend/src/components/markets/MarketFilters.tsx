@@ -1,8 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { categoriesAPI } from '@/api/categories';
+import { CategorySelector } from '@/components/shared/CategorySelector';
 
 export interface MarketFiltersState {
-  category_id?: string;
+  category_ids?: string[];
   status?: 'open' | 'resolved';
   sort?: 'volume' | 'newest';
   search?: string;
@@ -24,23 +25,32 @@ export const MarketFilters = ({
 
   return (
     <div className="app-panel p-4 flex gap-4 flex-wrap">
-      <select
-        value={filters.category_id || ''}
-        onChange={(e) =>
+      <CategorySelector
+        className="min-w-[260px] flex-1"
+        categories={categoriesData?.categories ?? []}
+        selectedIds={filters.category_ids || []}
+        onToggleCategory={(categoryId: string) => {
+          const isSelected = !!filters.category_ids?.includes(categoryId);
+          const next = isSelected
+            ? (filters.category_ids || []).filter((id) => id !== categoryId)
+            : [...(filters.category_ids || []), categoryId];
+
           onFiltersChange({
             ...filters,
-            category_id: e.target.value || undefined,
+            category_ids: next.length ? next : undefined,
+          });
+        }}
+        onClear={() =>
+          onFiltersChange({
+            ...filters,
+            category_ids: undefined,
           })
         }
-        className="px-3 py-2 border border-primary/25 rounded-lg text-sm bg-background"
-      >
-        <option value="">Toutes les catégories</option>
-        {categoriesData?.categories.map((cat) => (
-          <option key={cat.id} value={cat.id}>
-            {cat.name}
-          </option>
-        ))}
-      </select>
+        clearLabel="Toutes les categories"
+        placeholder="Toutes les categories"
+        searchPlaceholder="Filtrer les categories..."
+        emptyMessage="Aucune categorie trouvee."
+      />
 
       <select
         value={filters.status || ''}

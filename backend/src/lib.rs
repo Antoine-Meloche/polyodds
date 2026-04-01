@@ -37,6 +37,7 @@ pub async fn build_app(config: AppConfig) -> anyhow::Result<Router> {
         .route("/api/auth/me", get(auth_handlers::me))
         .route("/api/auth/daily-claim", post(auth_handlers::daily_claim))
         .route("/api/categories", get(categories::list_categories).post(categories::create_category))
+        .route("/api/categories/:id", delete(categories::delete_category))
         .route("/api/users/:id", get(users::get_user))
         .route("/api/users/:id/bets", get(users::get_user_bets))
         .route("/api/users/me", delete(users::delete_me))

@@ -43,20 +43,23 @@ CREATE TABLE IF NOT EXISTS markets (
   title VARCHAR(255) NOT NULL,
   description TEXT NOT NULL DEFAULT '',
   category_id UUID NOT NULL REFERENCES categories(id),
+  category_ids UUID[] NOT NULL,
   community_id UUID REFERENCES communities(id) ON DELETE CASCADE,
   creator_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   outcomes TEXT[] NOT NULL,
-  status VARCHAR(50) NOT NULL DEFAULT 'ouvert',
+  status VARCHAR(50) NOT NULL DEFAULT 'open',
   pools BIGINT[] NOT NULL,
   winning_outcome_index INT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  CHECK (status IN ('ouvert', 'fermé')),
+  CHECK (status IN ('open', 'resolved')),
+  CHECK (array_length(category_ids, 1) >= 1),
   CHECK (array_length(outcomes, 1) = array_length(pools, 1)),
   CHECK (array_length(outcomes, 1) >= 2)
 );
 CREATE INDEX IF NOT EXISTS idx_markets_status ON markets(status);
 CREATE INDEX IF NOT EXISTS idx_markets_category ON markets(category_id);
+CREATE INDEX IF NOT EXISTS idx_markets_category_ids ON markets USING GIN (category_ids);
 CREATE INDEX IF NOT EXISTS idx_markets_community ON markets(community_id);
 
 CREATE TABLE IF NOT EXISTS bets (
@@ -65,12 +68,27 @@ CREATE TABLE IF NOT EXISTS bets (
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   outcome_index INT NOT NULL,
   amount BIGINT NOT NULL,
+  side VARCHAR(10) NOT NULL DEFAULT 'buy',
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  CHECK (amount > 0)
+  CHECK (amount > 0),
+  CHECK (side IN ('buy', 'sell'))
 );
 CREATE INDEX IF NOT EXISTS idx_bets_market ON bets(market_id);
 CREATE INDEX IF NOT EXISTS idx_bets_user ON bets(user_id);
 CREATE INDEX IF NOT EXISTS idx_bets_market_user ON bets(market_id, user_id);
+
+CREATE TABLE IF NOT EXISTS market_positions (
+  market_id UUID NOT NULL REFERENCES markets(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  outcome_index INT NOT NULL,
+  shares BIGINT NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (market_id, user_id, outcome_index),
+  CHECK (shares >= 0)
+);
+CREATE INDEX IF NOT EXISTS idx_market_positions_market_user
+  ON market_positions(market_id, user_id);
 
 CREATE TABLE IF NOT EXISTS probability_snapshots (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -83,6 +101,7 @@ CREATE INDEX IF NOT EXISTS idx_probability_snapshots_market ON probability_snaps
 INSERT INTO categories (name, slug)
 VALUES
   ('Poly', 'poly'),
-  ('General', 'general'),
+  ('Société Technique', 'st'),
   ('PolyOrbite', 'polyorbite')
 ON CONFLICT (slug) DO NOTHING;
+

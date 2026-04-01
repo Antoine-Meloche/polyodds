@@ -50,10 +50,12 @@ export async function createMarketViaApi(
     title?: string;
     description?: string;
     category_id?: string;
+    category_ids?: string[];
     outcomes?: string[];
   }
 ) {
-  const category_id = data?.category_id ?? (await firstCategoryId(request));
+  const fallbackCategoryId = data?.category_id ?? (await firstCategoryId(request));
+  const category_ids = data?.category_ids && data.category_ids.length > 0 ? data.category_ids : [fallbackCategoryId];
   const title = data?.title ?? `Market ${uniqueSuffix()}`;
   const description = data?.description ?? 'Market created by feature tests';
 
@@ -64,7 +66,7 @@ export async function createMarketViaApi(
     data: {
       title,
       description,
-      category_id,
+      category_ids,
       outcomes: data?.outcomes ?? ['Yes', 'No'],
     },
   });
